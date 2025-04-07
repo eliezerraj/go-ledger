@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: OIDC role
+
+Parameters:
+  Versao:
+    Type: String
+    Default: 0
+  Env:
+    Description: stack environment
+    Type: String
+  providerURL:
+    Type: String
+  ServiceAccountName:
+    Type: String
+    Default: sa-go-ledger
+  K8Namespace:
+    Type: String
+    Description: Namespace
+    
+Mappings:
+  Tag:
+    service:
+      value: go-ledger
+    owner:
+      value: architecture
+    platform:
+      value: poc
+    application:
+      value: go-ledger
+    component:
+      value: go-ledger
+    PCIClassification:
+      value: non-pci
+Resources:
+  OIDCRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: OIDCRoleGoLedger
+      AssumeRolePolicyDocument:
+        Fn::Sub:
+        - "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"\
+          Effect\": \"Allow\",\n      \"Principal\": {\n        \"Federated\": \"\
+          arn:aws:iam::${AWS::AccountId}:oidc-provider/oidc.eks.${AWS::Region}.amazonaws.com/id/${eksId}\"\
+          \n      },\n      \"Action\": \"sts:AssumeRoleWithWebIdentity\",\n     \
+          \ \"Condition\": {\n        \"StringEquals\": {\n          \"${eksEndpoint}:sub\"\
+          : \"system:serviceaccount:${K8Namespace}:${ServiceAccountName}\"\n\
+          \        }\n      }\n    }\n  ]\n}\n"
+        - eksId:
+            Fn::Select:
+            - 4
+            - Fn::Split:
+              - /
+              - Ref: providerURL
+          eksEndpoint:
+            Fn::Select:
+            - 1
+            - Fn::Split:
+              - //
+              - Ref: providerURL
+      Policies:
+      - PolicyName: OIDCRoleGoLedgerPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action: #TODO add custom policy for S3
+            - s3:PutObject
+            Resource: '*'
+            Effect: Allow
+          - Action: #TODO add custom policy for SQS            
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:CreateQueue
+            Resource: '*'
+            Effect: Allow
+          - Action:
+            - kms:Decrypt
+            - secretsmanager:GetResourcePolicy
+            - secretsmanager:GetSecretValue
+            - secretsmanager:DescribeSecret
+            - secretsmanager:ListSecretVersionIds
+            Resource: '*'
+            Effect: Allow
+          - Action:
+            - elasticfilesystem:DescribeAccessPoints
+            - elasticfilesystem:DescribeFileSystems
+            - elasticfilesystem:DescribeMountTargets
+            - ec2:DescribeAvailabilityZones
+            Resource: '*'
+            Effect: Allow
+          - Action:
+            - elasticfilesystem:CreateAccessPoint
+            Condition:
+              StringLike:
+                "aws:RequestTag/efs.csi.aws.com/cluster": true
+            Resource: '*'
+            Effect: Allow
+          - Action:
+            - elasticfilesystem:DeleteAccessPoint
+            Condition:
+              StringEquals:
+                "aws:ResourceTag/efs.csi.aws.com/cluster": true
+            Resource: '*'
+            Effect: Allow  
+      Tags:
+      - Key: env
+        Value:
+          Ref: Env
+      - Key: service
+        Value:
+          Fn::FindInMap:
+          - Tag
+          - service
+          - value
+      - Key: stack
+        Value:
+          Fn::Sub: ${AWS::StackName}
+      - Key: platform
+        Value:
+          Fn::FindInMap:
+          - Tag
+          - platform
+          - value
+      - Key: application
+        Value:
+          Fn::FindInMap:
+          - Tag
+          - application
+          - value
+      - Key: component
+        Value:
+          Fn::FindInMap:
+          - Tag
+          - component
+          - value
+      - Key: pci_classification
+        Value:
+          Fn::FindInMap:
+          - Tag
+          - PCIClassification
+          - value
+      - Key: owner
+        Value:
+          Fn::FindInMap:
+          - Tag
+          - owner
+          - value
+      - Key: resource
+        Value: iam-role-oidc
+      - Key: name
+        Value: !Sub "oidc iam role"
+
+Outputs:
+  OIDCRole:
+    Value: !GetAtt 'OIDCRole.Arn'

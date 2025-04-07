@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "Env",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "K8Namespace",
+    "ParameterValue": "test-a"
+  },
+  {
+    "ParameterKey": "providerURL",
+    "ParameterValue": "https://oidc.eks.us-east-2.amazonaws.com/id/8D68C5A86EBBDC04DD570CF1DAFB76BE"
+  }
+]
