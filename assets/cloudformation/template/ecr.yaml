@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template ECR Repo v2.0 - 26/03/2025
+
+Parameters:
+  RepositoryName: 
+    Type: String
+    Default: go-ledger
+  Env:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - hml
+      - prd
+  BusinessUnitName:
+    Type: String
+    Default: global
+  PlatformName:
+    Type: String
+    Default: dockone
+  ApplicationName:
+    Type: String
+    Default: go-ledger
+  ComponentName:
+    Type: String
+    Default: ecr
+  PciClassificationName:
+    Type: String
+    Default: non-pci
+    AllowedValues:
+      - pci
+      - pci-connected
+      - non-pci
+  Owner:
+    Type: String
+    Default: architecture
+
+Resources:
+  EcrRepo:
+    Type: "AWS::ECR::Repository"
+    Properties:
+      RepositoryName:  !Ref RepositoryName
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only the last 6 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 6
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowPublicRead"
+            Effect: "Allow"
+            Principal: "*"
+            Action:
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:BatchGetImage"
+              - "ecr:BatchCheckLayerAvailability"
+      Tags:
+        - Key: env
+          Value: !Ref Env
+        - Key: stack
+          Value: !Sub ${AWS::StackName}
+        - Key: name
+          Value: !Ref RepositoryName
+        - Key: resource
+          Value: DBParameterGroup
+        - Key: business_unit
+          Value: !Ref BusinessUnitName
+        - Key: platform
+          Value: !Ref PlatformName
+        - Key: application
+          Value: !Ref ApplicationName
+        - Key: component
+          Value: !Ref ComponentName
+        - Key: owner
+          Value: !Ref Owner
+        - Key: pci_classification
+          Value: !Ref PciClassificationName
+
+Outputs:
+  EcrRepo:
+    Value: !GetAtt EcrRepo.RepositoryUri

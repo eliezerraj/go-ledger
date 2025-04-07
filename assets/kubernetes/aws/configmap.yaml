@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: &app-name go-ledger-cm
+  namespace: test-a
+  labels:
+    app: *app-name
+data:
+  API_VERSION: "3.0"
+  POD_NAME: "go-ledger.k8"
+  PORT: "6003"
+  DB_HOST: "rds-proxy-db-arch.proxy-couoacqalfwt.us-east-2.rds.amazonaws.com"
+  DB_PORT: "5432"
+  DB_NAME: "postgres"
+  DB_SCHEMA: "public"
+  DB_DRIVER: "postgres"
+  SETPOD_AZ: "false"
+  ENV: "dev"
+
+  OTEL_EXPORTER_OTLP_ENDPOINT: "arch-eks-01-xray-collector.default.svc.cluster.local:4317"
+  USE_STDOUT_TRACER_EXPORTER: "false"
+  USE_OTLP_COLLECTOR: "true" 
+  AWS_CLOUDWATCH_LOG_GROUP_NAMES: "/dock/eks/eks-arch-01"
+
+  KAFKA_USER: "admin"
+  KAFKA_PASSWORD: "admin"
+  KAFKA_PROTOCOL: "SASL_SSL"
+  KAFKA_MECHANISM: "SCRAM-SHA-512"
+  KAFKA_CLIENT_ID: "GO-LEDGER"
+  KAFKA_BROKER_1: "b-1.mskarch01.x25pj7.c3.kafka.us-east-2.amazonaws.com:9096"
+  KAFKA_BROKER_2: "b-2.mskarch01.x25pj7.c3.kafka.us-east-2.amazonaws.com:9096"
+  KAFKA_BROKER_3: "b-3.mskarch01.x25pj7.c3.kafka.us-east-2.amazonaws.com:9096"
+  KAFKA_PARTITION: "3"
+  KAFKA_REPLICATION: "2"
+  TOPIC_LEDGER: "topic.ledger.01"
+
+  NAME_SERVICE_01: "go-account"
+  URL_SERVICE_01: "https://vpce.global.dev.caradhras.io/pv"
+  METHOD_SERVICE_01: "GET"
+  X_APIGW_API_ID_SERVICE_01: "129t4y8eoj"
