@@ -47,15 +47,15 @@ func NewWorkerService(	workerRepository *database.WorkerRepository,
 func errorStatusCode(statusCode int) error{
 	var err error
 	switch statusCode {
-	case http.StatusUnauthorized:
-		err = erro.ErrUnauthorized
-	case http.StatusForbidden:
-		err = erro.ErrHTTPForbiden
-	case http.StatusNotFound:
-		err = erro.ErrNotFound
-	default:
-		err = erro.ErrServer
-	}
+		case http.StatusUnauthorized:
+			err = erro.ErrUnauthorized
+		case http.StatusForbidden:
+			err = erro.ErrHTTPForbiden
+		case http.StatusNotFound:
+			err = erro.ErrNotFound
+		default:
+			err = erro.ErrServer
+		}
 	return err
 }
 
@@ -92,12 +92,13 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	headers := map[string]string{
 		"Content-Type":  "application/json;charset=UTF-8",
 		"X-Request-Id": trace_id,
+		"x-apigw-api-id": s.apiService[0].XApigwApiId,
 		"Host": s.apiService[0].HostName,
 	}
 	httpClient := go_core_api.HttpClient {
 		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountID,
 		Method: s.apiService[0].Method,
-		Timeout: 3,
+		Timeout: 15,
 		Headers: &headers,
 	}
 
@@ -175,17 +176,13 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 			return nil, err
 		}
 
-		// revert the decimal position integer to float
-		//res_transactionDetail.DebitAmount = res_transactionDetail.DebitAmount / 100
-		//res_transactionDetail.CreditAmount = res_transactionDetail.CreditAmount / 100
-
 		list_transactionDetail = append(list_transactionDetail, *res_transactionDetail)
 	}
 
 	res_moviment_transaction := model.MovimentTransaction{	Transaction: *res_transaction,
 															TransactionDetail: list_transactionDetail, }
 
-	// Step 02
+	// --------------------------- STEP 02 ------------------------------------//
 	// Start Kafka transaction (if workerEvent is nil means kafka unabled)
 	if s.workerEvent != nil {
 		err = s.workerEvent.WorkerKafka.BeginTransaction()
