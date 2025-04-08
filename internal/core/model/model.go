@@ -40,7 +40,7 @@ type ApiService struct {
 	Name			string `json:"name_service"`
 	Url				string `json:"url"`
 	Method			string `json:"method"`
-	Header_x_apigw_api_id	string `json:"x-apigw-api-id"`
+	XApigwApiId		string `json:"x-apigw-api-id"`
 	HostName		string `json:"host_name"`
 }
 
