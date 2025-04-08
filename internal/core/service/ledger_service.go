@@ -88,13 +88,22 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	transaction_at := time.Now()
 	
 	// Get the Account ID (PK) from Account-service
-	res_payload, statusCode, err := apiService.CallApi(ctx,
-														s.apiService[0].Url + "/get/" + moviment.AccountID,
-														s.apiService[0].Method,
-														&s.apiService[0].Header_x_apigw_api_id,
-														nil,
-														&trace_id, 
-														nil)
+	// Set headers
+	headers := map[string]string{
+		"Content-Type":  "application/json;charset=UTF-8",
+		"X-Request-Id": trace_id,
+		"Host": s.apiService[0].HostName,
+	}
+	httpClient := go_core_api.HttpClient {
+		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountID,
+		Method: s.apiService[0].Method,
+		Timeout: 3,
+		Headers: &headers,
+	}
+
+	res_payload, statusCode, err := apiService.CallRestApi(	ctx,
+															httpClient, 
+															nil)
 	if err != nil {
 		return nil, errorStatusCode(statusCode)
 	}
