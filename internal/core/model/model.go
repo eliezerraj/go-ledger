@@ -41,6 +41,7 @@ type ApiService struct {
 	Url				string `json:"url"`
 	Method			string `json:"method"`
 	Header_x_apigw_api_id	string `json:"x-apigw-api-id"`
+	HostName		string `json:"host_name"`
 }
 
 type MessageRouter struct {
