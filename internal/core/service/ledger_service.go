@@ -90,10 +90,10 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	// Get the Account ID (PK) from Account-service
 	// Set headers
 	headers := map[string]string{
-		"Content-Type":  "application/json;charset=UTF-8",
-		"X-Request-Id": trace_id,
-		"x-apigw-api-id": s.apiService[0].XApigwApiId,
-		"Host": s.apiService[0].HostName,
+		"Content-Type":  	"application/json;charset=UTF-8",
+		"X-Request-Id": 	trace_id,
+		"x-apigw-api-id": 	s.apiService[0].XApigwApiId,
+		"Host": 			s.apiService[0].HostName,
 	}
 	httpClient := go_core_api.HttpClient {
 		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountID,
