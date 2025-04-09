@@ -76,8 +76,17 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	// handle connection
 	defer func() {
 		if err != nil {
+			childLogger.Info().Interface("trace-resquest-id", trace_id ).Msg("ROLLBACK !!!!")
+			err :=  s.workerEvent.WorkerKafka.AbortTransaction(ctx)
+			if err != nil {
+				childLogger.Error().Interface("trace-resquest-id", trace_id ).Err(err).Msg("failed to kafka AbortTransaction")
+			}
 			tx.Rollback(ctx)
 		} else {
+			err =  s.workerEvent.WorkerKafka.CommitTransaction(ctx)
+			if err != nil {
+				childLogger.Error().Interface("trace-resquest-id", trace_id ).Err(err).Msg("Failed to Kafka CommitTransaction")
+			}
 			tx.Commit(ctx)
 		}
 		s.workerRepository.DatabasePGServer.ReleaseTx(conn)
