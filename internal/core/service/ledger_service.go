@@ -44,7 +44,8 @@ func NewWorkerService(	workerRepository *database.WorkerRepository,
 }
 
 // About handle/convert http status code
-func errorStatusCode(statusCode int) error{
+func errorStatusCode(statusCode int, serviceName string) error{
+	childLogger.Info().Str("func","errorStatusCode").Interface("serviceName", serviceName).Interface("statusCode", statusCode).Send()
 	var err error
 	switch statusCode {
 		case http.StatusUnauthorized:
@@ -54,7 +55,7 @@ func errorStatusCode(statusCode int) error{
 		case http.StatusNotFound:
 			err = erro.ErrNotFound
 		default:
-			err = erro.ErrServer
+			err = errors.New(fmt.Sprintf("service %s in outage", serviceName))
 		}
 	return err
 }
@@ -96,7 +97,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	//business rule
 	transaction_at := time.Now()
 	
-	// Get the Account ID (PK) from Account-service
+	// check if account exists
 	// Set headers
 	headers := map[string]string{
 		"Content-Type":  	"application/json;charset=UTF-8",
@@ -111,19 +112,12 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 		Headers: &headers,
 	}
 
-	res_payload, statusCode, err := apiService.CallRestApi(	ctx,
+	_, statusCode, err := apiService.CallRestApi(	ctx,
 															httpClient, 
 															nil)
 	if err != nil {
-		return nil, errorStatusCode(statusCode)
+		return nil, errorStatusCode(statusCode, s.apiService[0].Name)
 	}
-
-	jsonString, err  := json.Marshal(res_payload)
-	if err != nil {
-		return nil, errors.New(err.Error())
-    }
-	var account_parsed model.Account
-	json.Unmarshal(jsonString, &account_parsed)
 
 	// get/chech transaction type
 	transactionType := model.TransactionType{TransactionTypeID: moviment.Type}
