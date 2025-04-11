@@ -101,7 +101,7 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 	varID := vars["id"]
 
 	moviment := model.Moviment{}
-	moviment.AccountID = varID
+	moviment.AccountFrom = model.Account{AccountID: varID}
 
 	// call service
 	res, err := h.workerService.GetAccountStament(req.Context(), moviment)
@@ -137,7 +137,7 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 		return &core_apiError
 	}
 
-	moviment := model.Moviment{ AccountID: varAcc,
+	moviment := model.Moviment{ AccountFrom: model.Account{AccountID: varAcc},
 								TransactionAt: convertDate}
 
 	// call service

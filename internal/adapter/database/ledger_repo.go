@@ -172,7 +172,7 @@ func (w WorkerRepository) GetSumMovimentAccount(ctx context.Context, moviment mo
 				group by tr.currency`
 
 	// execute			
-	rows, err := conn.Query(ctx, query, moviment.AccountID)
+	rows, err := conn.Query(ctx, query, moviment.AccountFrom.AccountID)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -218,7 +218,7 @@ func (w WorkerRepository) GetAllMovimentAccount(ctx context.Context, moviment mo
 				order by td.fk_transaction_id desc, td.id desc`
 
 	// execute			
-	rows, err := conn.Query(ctx, query, moviment.AccountID)
+	rows, err := conn.Query(ctx, query, moviment.AccountFrom.AccountID)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -264,7 +264,7 @@ func (w WorkerRepository) GetSumMovimentAccountPerDate(ctx context.Context, movi
 				group by tr.currency`
 
 	// execute			
-	rows, err := conn.Query(ctx, query, moviment.AccountID, moviment.TransactionAt)
+	rows, err := conn.Query(ctx, query, moviment.AccountFrom.AccountID, moviment.TransactionAt)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -311,7 +311,7 @@ func (w WorkerRepository) GetAllMovimentAccountPerDate(ctx context.Context, movi
 				order by td.fk_transaction_id desc, td.id desc`
 
 	// execute			
-	rows, err := conn.Query(ctx, query, moviment.AccountID, moviment.TransactionAt)
+	rows, err := conn.Query(ctx, query, moviment.AccountFrom.AccountID, moviment.TransactionAt)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
