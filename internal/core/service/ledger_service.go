@@ -44,7 +44,8 @@ func NewWorkerService(	workerRepository *database.WorkerRepository,
 }
 
 // About handle/convert http status code
-func errorStatusCode(statusCode int) error{
+func errorStatusCode(statusCode int, serviceName string) error{
+	childLogger.Info().Str("func","errorStatusCode").Interface("serviceName", serviceName).Interface("statusCode", statusCode).Send()
 	var err error
 	switch statusCode {
 		case http.StatusUnauthorized:
@@ -54,7 +55,7 @@ func errorStatusCode(statusCode int) error{
 		case http.StatusNotFound:
 			err = erro.ErrNotFound
 		default:
-			err = erro.ErrServer
+			err = errors.New(fmt.Sprintf("service %s in outage", serviceName))
 		}
 	return err
 }
@@ -93,11 +94,28 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 		span.End()
 	}()
 
-	//business rule
+	//set time transaction
 	transaction_at := time.Now()
+
+	// check transaction type
+	transactionType := model.TransactionType{TransactionTypeID: moviment.Type}
+	_, err = s.workerRepository.GetTransactionType(ctx, transactionType)
+	if err != nil {
+		return nil, err
+	}
+
+	// set the account from according transaction type (deposit / withdrawn)
+	switch moviment.Type {
+		case "DEPOSIT":
+			moviment.AccountTo = &model.Account {AccountID: "ACC-BANK"}  // set account to 
+		case "WITHDRAW":
+			moviment.AccountTo = &model.Account {AccountID: "ACC-BANK"}  // set account to 
+		case "WIRE_TRANSFER":
+		default:
+			return nil, erro.ErrTypeInvalid
+	}
 	
-	// Get the Account ID (PK) from Account-service
-	// Set headers
+	// check account_to
 	headers := map[string]string{
 		"Content-Type":  	"application/json;charset=UTF-8",
 		"X-Request-Id": 	trace_id,
@@ -105,34 +123,34 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 		"Host": 			s.apiService[0].HostName,
 	}
 	httpClient := go_core_api.HttpClient {
-		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountID,
+		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountFrom.AccountID,
+		Method: s.apiService[0].Method,
+		Timeout: 15,
+		Headers: &headers,
+	}
+	_, statusCode, err := apiService.CallRestApi(ctx,
+												httpClient, 
+												nil)
+	if err != nil {
+		return nil, errorStatusCode(statusCode, s.apiService[0].Name)
+	}
+
+	// check account_from
+	httpClient = go_core_api.HttpClient {
+		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountFrom.AccountID,
 		Method: s.apiService[0].Method,
 		Timeout: 15,
 		Headers: &headers,
 	}
 
-	res_payload, statusCode, err := apiService.CallRestApi(	ctx,
-															httpClient, 
-															nil)
+	_, statusCode, err = apiService.CallRestApi(ctx,
+												httpClient, 
+												nil)
 	if err != nil {
-		return nil, errorStatusCode(statusCode)
+		return nil, errorStatusCode(statusCode, s.apiService[0].Name)
 	}
 
-	jsonString, err  := json.Marshal(res_payload)
-	if err != nil {
-		return nil, errors.New(err.Error())
-    }
-	var account_parsed model.Account
-	json.Unmarshal(jsonString, &account_parsed)
-
-	// get/chech transaction type
-	transactionType := model.TransactionType{TransactionTypeID: moviment.Type}
-	_, err = s.workerRepository.GetTransactionType(ctx, transactionType)
-	if err != nil {
-		return nil, err
-	}
-
-	// add transaction
+	// create a ledger transaction
 	transaction := model.Transaction{	Currency: moviment.Currency,
 										Description: moviment.Type,
 										TransactionAt: transaction_at,
@@ -143,32 +161,42 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	}
 
 	// add transaction detail - double partition
-	var debitAmount int64  = 0
-	var creditAmount int64  = 0
-	account_id := moviment.AccountID
+	var debitAmount, creditAmount int64
+	var account_id string
 	ledger_id := "BANK:LIABILITY"
 
 	list_transactionDetail := []model.TransactionDetail{}
 	for i := 0; i < 2; i++ {
-
 		switch moviment.Type {
 			case "DEPOSIT":
 				if i == 0 {
 					creditAmount = int64(moviment.Amount * 100) // store as an integer (2 decimal position)
 					debitAmount = 0
+					account_id = moviment.AccountFrom.AccountID
 				} else {
 					creditAmount = 0
 					debitAmount = int64(moviment.Amount * 100) // store as an integer (2 decimal position)
-					account_id = "ACC-BANK"
+					account_id = moviment.AccountTo.AccountID
 				}
 			case "WITHDRAW":
 				if i == 0 {
 					creditAmount = 0
 					debitAmount = int64(moviment.Amount * 100) // store as an integer (2 decimal position)
+					account_id = moviment.AccountFrom.AccountID
+					} else {
+					creditAmount = int64(moviment.Amount * 100) // store as an integer (2 decimal position)
+					debitAmount = 0
+					account_id = moviment.AccountTo.AccountID
+				}
+			case "WIRE_TRANSFER":
+				if i == 0 {
+					creditAmount = 0
+					debitAmount = int64(moviment.Amount * 100) // store as an integer (2 decimal position)
+					account_id = moviment.AccountFrom.AccountID	
 				} else {
 					creditAmount = int64(moviment.Amount * 100) // store as an integer (2 decimal position)
 					debitAmount = 0
-					account_id = "ACC-BANK"
+					account_id = moviment.AccountTo.AccountID
 				}
 			default:
 				return nil, erro.ErrTypeInvalid
