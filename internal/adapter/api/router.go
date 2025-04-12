@@ -40,7 +40,7 @@ func NewHttpRouters(workerService *service.WorkerService) HttpRouters {
 
 // About return a health
 func (h *HttpRouters) Health(rw http.ResponseWriter, req *http.Request) {
-	childLogger.Info().Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Msg("Health")
+	childLogger.Info().Str("func","Health").Send()
 
 	json.NewEncoder(rw).Encode(model.MessageRouter{Message: "true"})
 }

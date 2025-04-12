@@ -21,7 +21,7 @@ func GetEndpointEnv() []model.ApiService {
 	if os.Getenv("URL_SERVICE_00") !=  "" {
 		apiService00.Url = os.Getenv("URL_SERVICE_00")
 	}
-	if os.Getenv("X_APIGW_API_ID_SERVICE_01") !=  "" {
+	if os.Getenv("X_APIGW_API_ID_SERVICE_00") !=  "" {
 		apiService00.XApigwApiId = os.Getenv("X_APIGW_API_ID_SERVICE_00")
 	}
 	if os.Getenv("METHOD_SERVICE_00") !=  "" {
