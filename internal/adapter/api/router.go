@@ -47,7 +47,7 @@ func (h *HttpRouters) Health(rw http.ResponseWriter, req *http.Request) {
 
 // About return a live
 func (h *HttpRouters) Live(rw http.ResponseWriter, req *http.Request) {
-	childLogger.Info().Str("func","Live").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
+	childLogger.Info().Str("func","Live").Send()
 
 	json.NewEncoder(rw).Encode(model.MessageRouter{Message: "true"})
 }
