@@ -22,6 +22,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/contrib/propagators/aws/xray"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+
 )
 
 var childLogger = log.With().Str("component","go-ledger").Str("package","internal.infra.server").Logger()
@@ -60,6 +61,7 @@ func (h HttpServer) StartHttpAppServer(	ctx context.Context,
 		otel.SetTextMapPropagator(xray.Propagator{})
 		otel.SetTracerProvider(tp)
 	}
+
 	defer func() { 
 		if tp != nil {
 			err := tp.Shutdown(ctx)

@@ -18,6 +18,9 @@ import(
 	
 	go_core_observ "github.com/eliezerraj/go-core/observability"
 	go_core_api "github.com/eliezerraj/go-core/api"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 var tracerProvider go_core_observ.TracerProvider
@@ -33,7 +36,8 @@ type WorkerService struct {
 // About create a new worker service
 func NewWorkerService(	workerRepository *database.WorkerRepository,
 						apiService		[]model.ApiService,
-						workerEvent	*event.WorkerEvent,) *WorkerService{
+						workerEvent	*event.WorkerEvent,
+						) *WorkerService{
 	childLogger.Info().Str("func","NewWorkerService").Send()
 
 	return &WorkerService{
@@ -227,14 +231,30 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 			childLogger.Error().Interface("trace-resquest-id", trace_id ).Err(err).Msg("failed to kafka BeginTransaction")
 			return nil, err
 		}
+		
 		// Prepare to event
 		key := strconv.Itoa(res_transaction.ID)
 		payload_bytes, err := json.Marshal(res_moviment_transaction)
 		if err != nil {
 			return nil, err
 		}
+		
+		// prepare header
+		carrier := propagation.MapCarrier{}
+		otel.GetTextMapPropagator().Inject(ctx, &carrier)
+	
+		headers_msk := make(map[string]string)
+		for k, v := range carrier {
+			headers_msk[k] = v
+		}
+
+		spanContext := span.SpanContext()
+		headers["my-tracer-id"] = trace_id
+		headers["TraceID"] = spanContext.TraceID().String()
+		headers["SpanID"] = spanContext.SpanID().String()
+
 		// publish event
-		err = s.workerEvent.WorkerKafka.Producer(ctx, s.workerEvent.Topics[0], key, &trace_id, payload_bytes)
+		err = s.workerEvent.WorkerKafka.Producer(s.workerEvent.Topics[0], key, &headers, payload_bytes)
 		if err != nil {
 			return nil, err
 		}
