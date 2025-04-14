@@ -23,7 +23,7 @@ var(
 	appServer	model.AppServer
 	databaseConfig 		go_core_pg.DatabaseConfig
 	databasePGServer 	go_core_pg.DatabasePGServer
-
+	
 	childLogger = log.With().Str("component","go-ledger").Str("package", "main").Logger()
 )
 
@@ -82,7 +82,10 @@ func main (){
 	
 	// wire	
 	database := database.NewWorkerRepository(&databasePGServer)
-	workerService := service.NewWorkerService(database, appServer.ApiService, workerEvent)
+	workerService := service.NewWorkerService(database, 
+											appServer.ApiService, 
+											workerEvent,
+											)
 	httpRouters := api.NewHttpRouters(workerService)
 
 	// start server

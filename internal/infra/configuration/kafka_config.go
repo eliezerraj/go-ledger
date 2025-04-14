@@ -54,8 +54,8 @@ func GetKafkaEnv() (go_core_event.KafkaConfigurations, []string) {
 
 	list_topics := []string{}
 
-	if os.Getenv("TOPIC_PIX") !=  "" {
-		list_topics = append(list_topics, os.Getenv("TOPIC_PIX"))
+	if os.Getenv("TOPIC_LEDGER") !=  "" {
+		list_topics = append(list_topics, os.Getenv("TOPIC_LEDGER"))
 	}
 
 	return kafkaConfigurations, list_topics
