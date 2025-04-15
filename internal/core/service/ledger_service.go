@@ -66,7 +66,7 @@ func errorStatusCode(statusCode int, serviceName string) error{
 
 // About create a moviment transaction
 func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.Moviment) (*model.MovimentTransaction, error){
-	childLogger.Info().Str("func","MovimentTransaction").Interface("trace-resquest-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
+	childLogger.Info().Str("func","MovimentTransaction").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
 	span := tracerProvider.Span(ctx, "service.MovimentTransaction")
@@ -81,16 +81,17 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	// handle connection
 	defer func() {
 		if err != nil {
-			childLogger.Info().Interface("trace-resquest-id", trace_id ).Msg("ROLLBACK !!!!")
+			childLogger.Info().Interface("trace-request-id", trace_id ).Msg("ROLLBACK !!!!")
 			err :=  s.workerEvent.WorkerKafka.AbortTransaction(ctx)
 			if err != nil {
-				childLogger.Error().Interface("trace-resquest-id", trace_id ).Err(err).Msg("failed to kafka AbortTransaction")
+				childLogger.Info().Interface("trace-request-id", trace_id ).Err(err).Msg("failed to kafka AbortTransaction")
 			}
 			tx.Rollback(ctx)
 		} else {
+			childLogger.Info().Interface("trace-request-id", trace_id ).Msg("COMMIT !!!!")
 			err =  s.workerEvent.WorkerKafka.CommitTransaction(ctx)
 			if err != nil {
-				childLogger.Error().Interface("trace-resquest-id", trace_id ).Err(err).Msg("Failed to Kafka CommitTransaction")
+				childLogger.Info().Interface("trace-request-id", trace_id ).Err(err).Msg("Failed to Kafka CommitTransaction")
 			}
 			tx.Commit(ctx)
 		}
@@ -210,7 +211,8 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 														AccountID:		account_id,
 														FkLedgerID: 	ledger_id,
 														DebitAmount: 	debitAmount,
-														CreditAmount: 	creditAmount,}
+														CreditAmount: 	creditAmount,
+														TraceID: 		trace_id,}
 
 		res_transactionDetail, err := s.workerRepository.AddTransactionDetail(ctx, tx, transactionDetail)
 		if err != nil {
@@ -228,7 +230,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	if s.workerEvent != nil {
 		err = s.workerEvent.WorkerKafka.BeginTransaction()
 		if err != nil {
-			childLogger.Error().Interface("trace-resquest-id", trace_id ).Err(err).Msg("failed to kafka BeginTransaction")
+			childLogger.Error().Interface("trace-request-id", trace_id ).Err(err).Msg("failed to kafka BeginTransaction")
 			return nil, err
 		}
 		
@@ -249,7 +251,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 		}
 
 		spanContext := span.SpanContext()
-		headers["my-tracer-id"] = trace_id
+		headers["trace-request-id"] = trace_id
 		headers["TraceID"] = spanContext.TraceID().String()
 		headers["SpanID"] = spanContext.SpanID().String()
 
@@ -266,9 +268,9 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	return &res_moviment_transaction, nil
 }
 
-// About get account statement
+// About get ledger all moviment
 func (s *WorkerService) GetAccountStament(ctx context.Context, moviment model.Moviment) (*model.MovimentStatement, error){
-	childLogger.Info().Str("func","GetAccountStament").Interface("trace-resquest-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
+	childLogger.Info().Str("func","GetAccountStament").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
 	span := tracerProvider.Span(ctx, "service.GetAccountStament")
@@ -302,9 +304,9 @@ func (s *WorkerService) GetAccountStament(ctx context.Context, moviment model.Mo
 	return &res_moviment_statement, nil
 }
 
-// About get account statement
+// About get ledger moviment per data
 func (s *WorkerService) GetAccountMovimentStatementPerDate(ctx context.Context, moviment model.Moviment) (*model.MovimentStatement, error){
-	childLogger.Info().Str("func","GetAccountMovimentStatementPerDate").Interface("trace-resquest-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
+	childLogger.Info().Str("func","GetAccountMovimentStatementPerDate").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
 	span := tracerProvider.Span(ctx, "service.GetAccountMovimentStatementPerDate")

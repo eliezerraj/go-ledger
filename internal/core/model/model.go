@@ -55,6 +55,7 @@ type Account struct {
 	CreatedAt		*time.Time 	`json:"created_at,omitempty"`
 	UpdatedAt		*time.Time 	`json:"updated_at,omitempty"`
 	UserLastUpdate	*string  	`json:"user_last_update,omitempty"`
+	TraceID			string		`json:"trace_request_id,omitempty"`
 	TenantId		string  	`json:"tenant_id,omitempty"`
 }
 
@@ -65,6 +66,7 @@ type Moviment struct {
 	Type			string  	`json:"type,omitempty"`
 	Currency		string  	`json:"currency,omitempty"`
 	Amount			float64		`json:"amount,omitempty"`
+	TraceID			string		`json:"trace_request_id,omitempty"`
 	TenantId		string  	`json:"tenant_id,omitempty"`
 }
 
@@ -90,6 +92,7 @@ type Transaction struct {
 	Currency			string		`json:"fk_ledger_id,omitempty"`
 	TransactionAt		time.Time 	`json:"transaction_at,omitempty"`
 	UpdatedAt			*time.Time 	`json:"updated_at,omitempty"`
+	TraceID				string		`json:"trace_request_id,omitempty"`
 	TenantId			string  	`json:"tenant_id,omitempty"`
 }
 
@@ -105,5 +108,6 @@ type TransactionDetail struct {
 	CreditAmount		int64	  	`json:"credit_amount"`
 	CreatedAt			time.Time 	`json:"created_at,omitempty"`
 	UpdatedAt			*time.Time 	`json:"updated_at,omitempty"`
+	TraceID				string		`json:"trace_request_id,omitempty"`
 	TenantId			string  	`json:"tenant_id,omitempty"`
 }
