@@ -82,8 +82,9 @@ func (w WorkerRepository) AddTransactionDetail(ctx context.Context, tx pgx.Tx, t
 												fk_account_id,
 												debit_amount,
 												credit_amount,
-												created_at) 
-												VALUES($1, $2, $3, $4, $5, $6) RETURNING id`
+												created_at,
+												trace_id) 
+												VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 	
 	// execute	
 	row := tx.QueryRow(ctx, query,  transactionDetail.FkTxID,  
@@ -91,7 +92,8 @@ func (w WorkerRepository) AddTransactionDetail(ctx context.Context, tx pgx.Tx, t
 									transactionDetail.AccountID,
 									transactionDetail.DebitAmount,
 									transactionDetail.CreditAmount,
-									transactionDetail.CreatedAt)
+									transactionDetail.CreatedAt,
+									transactionDetail.TraceID,)
 
 	var id int
 	
