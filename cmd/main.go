@@ -84,11 +84,16 @@ func main (){
 	database := database.NewWorkerRepository(&databasePGServer)
 	workerService := service.NewWorkerService(database, 
 											appServer.ApiService, 
-											workerEvent,
-											)
+											workerEvent )
 	httpRouters := api.NewHttpRouters(workerService)
 
 	// start server
 	httpServer := server.NewHttpAppServer(appServer.Server)
 	httpServer.StartHttpAppServer(ctx, &httpRouters, &appServer)
+
+	// Close kafka producer
+	defer func() { 
+		workerEvent.WorkerKafka.Close()
+		childLogger.Info().Msg("stop main done !!!")
+	}()
 }

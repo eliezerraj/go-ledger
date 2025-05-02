@@ -77,37 +77,25 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// handle connection
 	defer func() {
 		if err != nil {
-			childLogger.Info().Interface("trace-request-id", trace_id ).Msg("ROLLBACK !!!!")
-			err :=  s.workerEvent.WorkerKafka.AbortTransaction(ctx)
-			if err != nil {
-				childLogger.Info().Interface("trace-request-id", trace_id ).Err(err).Msg("failed to kafka AbortTransaction")
-			}
+			childLogger.Info().Interface("trace-request-id", trace_id ).Msg("ROLLBACK TX !!!")
 			tx.Rollback(ctx)
 		} else {
-			childLogger.Info().Interface("trace-request-id", trace_id ).Msg("COMMIT !!!!")
-			err =  s.workerEvent.WorkerKafka.CommitTransaction(ctx)
-			if err != nil {
-				childLogger.Info().Interface("trace-request-id", trace_id ).Err(err).Msg("Failed to Kafka CommitTransaction")
-			}
+			childLogger.Info().Interface("trace-request-id", trace_id ).Msg("COMMIT TX !!!")
 			tx.Commit(ctx)
 		}
+
+		childLogger.Info().Interface("trace-request-id", trace_id ).Msg("Release Conn !!!")
+		
 		s.workerRepository.DatabasePGServer.ReleaseTx(conn)
 		span.End()
 	}()
 
 	//set time transaction
 	transaction_at := time.Now()
-
-	// check transaction type
-	transactionType := model.TransactionType{TransactionTypeID: moviment.Type}
-	_, err = s.workerRepository.GetTransactionType(ctx, transactionType)
-	if err != nil {
-		return nil, err
-	}
 
 	// set the account from according transaction type (deposit / withdrawn)
 	switch moviment.Type {
@@ -120,7 +108,14 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 			return nil, erro.ErrTypeInvalid
 	}
 	
-	// check account_to
+	// check transaction type
+	transactionType := model.TransactionType{TransactionTypeID: moviment.Type}
+	_, err = s.workerRepository.GetTransactionType(ctx, transactionType)
+	if err != nil {
+		return nil, err
+	}
+
+	// check account_from
 	headers := map[string]string{
 		"Content-Type":  	"application/json;charset=UTF-8",
 		"X-Request-Id": 	trace_id,
@@ -142,7 +137,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 
 	// check account_from
 	httpClient = go_core_api.HttpClient {
-		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountFrom.AccountID,
+		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountTo.AccountID,
 		Method: s.apiService[0].Method,
 		Timeout: 15,
 		Headers: &headers,
@@ -158,8 +153,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	// create a ledger transaction
 	transaction := model.Transaction{	Currency: moviment.Currency,
 										Description: moviment.Type,
-										TransactionAt: transaction_at,
-									}
+										TransactionAt: transaction_at,}
 	res_transaction, err := s.workerRepository.AddTransaction(ctx, tx, transaction)
 	if err != nil {
 		return nil, err
@@ -228,35 +222,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	// --------------------------- STEP 02 ------------------------------------//
 	// Start Kafka transaction (if workerEvent is nil means kafka unabled)
 	if s.workerEvent != nil {
-		err = s.workerEvent.WorkerKafka.BeginTransaction()
-		if err != nil {
-			childLogger.Error().Interface("trace-request-id", trace_id ).Err(err).Msg("failed to kafka BeginTransaction")
-			return nil, err
-		}
-		
-		// Prepare to event
-		key := strconv.Itoa(res_transaction.ID)
-		payload_bytes, err := json.Marshal(res_moviment_transaction)
-		if err != nil {
-			return nil, err
-		}
-		
-		// prepare header
-		carrier := propagation.MapCarrier{}
-		otel.GetTextMapPropagator().Inject(ctx, &carrier)
-	
-		headers_msk := make(map[string]string)
-		for k, v := range carrier {
-			headers_msk[k] = v
-		}
-
-		spanContext := span.SpanContext()
-		headers["trace-request-id"] = trace_id
-		headers["TraceID"] = spanContext.TraceID().String()
-		headers["SpanID"] = spanContext.SpanID().String()
-
-		// publish event
-		err = s.workerEvent.WorkerKafka.Producer(s.workerEvent.Topics[0], key, &headers, payload_bytes)
+		err = s.ProducerEventKafka(ctx, moviment, res_moviment_transaction, *res_transaction)
 		if err != nil {
 			return nil, err
 		}
@@ -264,8 +230,88 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	} else {
 		res_moviment_transaction.Status = "event not send, kafka unabled"
 	}
-												
+	
 	return &res_moviment_transaction, nil
+}
+
+// About producer a event in kafka
+func(s *WorkerService) ProducerEventKafka(ctx context.Context, moviment model.Moviment, res_moviment_transaction model.MovimentTransaction, res_transaction model.Transaction) (err error) {
+	childLogger.Info().Str("func","ProducerEventKafka").Interface("trace-request-id", ctx.Value("trace-request-id")).Send()
+
+	// trace
+	span := tracerProvider.Span(ctx, "service.ProducerEventKafka")
+	trace_id := fmt.Sprintf("%v",ctx.Value("trace-request-id"))
+	defer span.End()
+
+	// Create a transacrion
+	err = s.workerEvent.WorkerKafka.BeginTransaction()
+	if err != nil {
+		childLogger.Error().Interface("trace-request-id", trace_id ).Err(err).Msg("failed to kafka BeginTransaction")
+		// Create a new producer and start a transaction
+		err = s.workerEvent.DestroyWorkerEventProducerTx(ctx)
+		if err != nil {
+			return  err
+		}
+		s.workerEvent.WorkerKafka.BeginTransaction()
+		if err != nil {
+			return err
+		}
+		childLogger.Info().Interface("trace-request-id", trace_id ).Msg("success to recreate a new producer")
+	}
+
+	// Prepare to event
+	key := strconv.Itoa(res_transaction.ID)
+	payload_bytes, err := json.Marshal(res_moviment_transaction)
+	if err != nil {
+		return err
+	}
+		
+	// prepare header
+	carrier := propagation.MapCarrier{}
+	otel.GetTextMapPropagator().Inject(ctx, &carrier)
+	
+	headers_msk := make(map[string]string)
+	for k, v := range carrier {
+		headers_msk[k] = v
+	}
+
+	spanContext := span.SpanContext()
+	headers_msk["trace-request-id"] = trace_id
+	headers_msk["TraceID"] = spanContext.TraceID().String()
+	headers_msk["SpanID"] = spanContext.SpanID().String()
+
+	// publish event
+	err = s.workerEvent.WorkerKafka.Producer(s.workerEvent.Topics[0], key, &headers_msk, payload_bytes)
+		
+	//force a error SIMULARTION
+	if(trace_id == "force-rollback"){
+		err = erro.ErrForceRollback
+	}
+	
+	if err != nil {
+		childLogger.Err(err).Interface("trace-request-id", trace_id ).Msg("KAFKA ROLLBACK !!!")
+		err_msk := s.workerEvent.WorkerKafka.AbortTransaction(ctx)
+		if err_msk != nil {
+			childLogger.Err(err_msk).Interface("trace-request-id", trace_id ).Msg("failed to kafka AbortTransaction")
+			return err_msk
+		}
+		return err
+	}
+
+	err = s.workerEvent.WorkerKafka.CommitTransaction(ctx)
+	if err != nil {
+		childLogger.Err(err).Interface("trace-request-id", trace_id ).Msg("Failed to Kafka CommitTransaction = KAFKA ROLLBACK COMMIT !!!")
+		err_msk := s.workerEvent.WorkerKafka.AbortTransaction(ctx)
+		if err_msk != nil {
+			childLogger.Err(err_msk).Interface("trace-request-id", trace_id ).Msg("failed to kafka AbortTransaction during CommitTransaction")
+			return err_msk
+		}
+		return err
+	}
+
+	childLogger.Info().Interface("trace-request-id", trace_id ).Msg("KAFKA COMMIT !!!")
+
+    return 
 }
 
 // About get ledger all moviment
