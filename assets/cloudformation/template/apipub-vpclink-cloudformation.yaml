@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform:
 - AWS::Serverless-2016-10-31
-Description: Apigateway Public VPCLink Integration v3.1 - 23/03/2025
+Description: Apigateway Public VPCLink Integration v3.2 - 26/04/2025
 
 Parameters:
   Versao:
@@ -123,7 +123,7 @@ Resources:
         schemes:
         - https
         paths:
-          /ledger/{proxy+}:
+          /{proxy+}:
             get:
               produces:
               - application/json
@@ -147,6 +147,7 @@ Resources:
                   integration.request.header.X-Request-ID: context.requestId
                   integration.request.header.client-id: context.authorizer.tenant_id
                   integration.request.header.X-Forwarded-For: context.identity.sourceIp      
+                  integration.request.header.jwt-id: context.authorizer.jwt_id
               security:
               - authorizer: []
             post:
@@ -172,6 +173,7 @@ Resources:
                   integration.request.header.X-Request-ID: context.requestId
                   integration.request.header.client-id: context.authorizer.tenant_id
                   integration.request.header.X-Forwarded-For: context.identity.sourceIp      
+                  integration.request.header.jwt-id: context.authorizer.jwt_id
               security:
               - authorizer: []
         x-amazon-apigateway-api-key-source: AUTHORIZER
