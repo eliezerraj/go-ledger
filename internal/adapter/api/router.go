@@ -69,6 +69,15 @@ func (h *HttpRouters) Context(rw http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(rw).Encode(fmt.Sprintf("%v",contextValues))
 }
 
+// About show pgx stats
+func (h *HttpRouters) Stat(rw http.ResponseWriter, req *http.Request) {
+	childLogger.Info().Str("func","Stat").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
+	
+	res := h.workerService.Stat(req.Context())
+
+	json.NewEncoder(rw).Encode(res)
+}
+
 // About add a moviment into ledger
 func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Request) error {
 	childLogger.Info().Str("func","MovimentTransaction").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
@@ -76,10 +85,12 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
 	span := tracerProvider.Span(req.Context(), "adapter.api.MovimentTransaction")
 	defer span.End()
 
+	trace_id := fmt.Sprintf("%v",req.Context().Value("trace-request-id"))
+
 	moviment := model.Moviment{}
 	err := json.NewDecoder(req.Body).Decode(&moviment)
     if err != nil {
-		core_apiError = core_apiError.NewAPIError(err, http.StatusBadRequest)
+		core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusBadRequest)
 		return &core_apiError
     }
 	defer req.Body.Close()
@@ -88,9 +99,9 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
 	if err != nil {
 		switch err {
 		case erro.ErrNotFound:
-			core_apiError = core_apiError.NewAPIError(err, http.StatusNotFound)
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
 		default:
-			core_apiError = core_apiError.NewAPIError(err, http.StatusInternalServerError)
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
 		}
 		return &core_apiError
 	}
@@ -106,6 +117,8 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 	span := tracerProvider.Span(req.Context(), "adapter.api.GetAccountMovimentStatement")
 	defer span.End()
 
+	trace_id := fmt.Sprintf("%v",req.Context().Value("trace-request-id"))
+
 	//parameters
 	vars := mux.Vars(req)
 	varID := vars["id"]
@@ -118,9 +131,9 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 	if err != nil {
 		switch err {
 		case erro.ErrNotFound:
-			core_apiError = core_apiError.NewAPIError(err, http.StatusNotFound)
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
 		default:
-			core_apiError = core_apiError.NewAPIError(err, http.StatusInternalServerError)
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
 		}
 		return &core_apiError
 	}
@@ -136,6 +149,8 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 	span := tracerProvider.Span(req.Context(), "adapter.api.GetAccountMovimentStatementPerDate")
 	defer span.End()
 
+	trace_id := fmt.Sprintf("%v",req.Context().Value("trace-request-id"))
+
 	//parameters
 	params := req.URL.Query()
 	varAcc := params.Get("account-id")
@@ -143,7 +158,7 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 
 	convertDate, err := core_tools.ConvertToDate(varDate)
 	if err != nil {
-		core_apiError = core_apiError.NewAPIError(erro.ErrUnmarshal, http.StatusBadRequest)
+		core_apiError = core_apiError.NewAPIError(erro.ErrUnmarshal, trace_id,  http.StatusBadRequest)
 		return &core_apiError
 	}
 
@@ -155,9 +170,9 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 	if err != nil {
 		switch err {
 		case erro.ErrNotFound:
-			core_apiError = core_apiError.NewAPIError(err, http.StatusNotFound)
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
 		default:
-			core_apiError = core_apiError.NewAPIError(err, http.StatusInternalServerError)
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
 		}
 		return &core_apiError
 	}
