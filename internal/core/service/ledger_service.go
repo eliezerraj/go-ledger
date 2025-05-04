@@ -85,6 +85,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	if err != nil {
 		return nil, err
 	}
+	defer s.workerRepository.DatabasePGServer.ReleaseTx(conn)
 
 	// handle connection
 	defer func() {
@@ -95,10 +96,6 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 			childLogger.Info().Interface("trace-request-id", trace_id ).Msg("COMMIT TX !!!")
 			tx.Commit(ctx)
 		}
-
-		childLogger.Info().Interface("trace-request-id", trace_id ).Msg("Release Conn !!!")
-		
-		s.workerRepository.DatabasePGServer.ReleaseTx(conn)
 		span.End()
 	}()
 
@@ -248,8 +245,9 @@ func(s *WorkerService) ProducerEventKafka(ctx context.Context, moviment model.Mo
 
 	// trace
 	span := tracerProvider.Span(ctx, "service.ProducerEventKafka")
-	trace_id := fmt.Sprintf("%v",ctx.Value("trace-request-id"))
 	defer span.End()
+	
+	trace_id := fmt.Sprintf("%v",ctx.Value("trace-request-id"))
 
 	// Create a transacrion
 	err = s.workerEvent.WorkerKafka.BeginTransaction()
