@@ -91,6 +91,9 @@ func (h HttpServer) StartHttpAppServer(	ctx context.Context,
 
 	wk_ctx := myRouter.Methods(http.MethodGet, http.MethodOptions).Subrouter()
     wk_ctx.HandleFunc("/context", httpRouters.Context)
+
+	stat := myRouter.Methods(http.MethodGet, http.MethodOptions).Subrouter()
+    stat.HandleFunc("/stat", httpRouters.Stat)	
 	
 	myRouter.HandleFunc("/info", func(rw http.ResponseWriter, req *http.Request) {
 		childLogger.Info().Str("HandleFunc","/info").Send()
