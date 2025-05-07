@@ -11,8 +11,6 @@ Parameters:
     Type: String
   providerURL:
     Type: String
-  providerURL2:
-    Type: String
   ServiceAccountName:
     Type: String
     Default: sa-go-ledger
@@ -41,40 +39,25 @@ Resources:
       RoleName: OIDCRoleGoLedger
       AssumeRolePolicyDocument:
         Fn::Sub:
-        - |
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              { 
-                "Effect": "Allow",
-                "Principal": {
-                  "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/oidc.eks.${AWS::Region}.amazonaws.com/id/${eksId}"
-                },
-                "Action": "sts:AssumeRoleWithWebIdentity",
-                  "Condition": {
-                    "StringEquals": {
-                      "${eksEndpoint}:sub": "system:serviceaccount:${K8Namespace}:${ServiceAccountName}"
-                    }
-                  }
-                },
-              { 
-                "Effect": "Allow",
-                "Principal": {
-                  "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/oidc.eks.${AWS::Region}.amazonaws.com/id/${eksId2}"
-                },
-                "Action": "sts:AssumeRoleWithWebIdentity",
-                  "Condition": {
-                    "StringEquals": {
-                      "${eksEndpoint2}:sub": "system:serviceaccount:${K8Namespace}:${ServiceAccountName}"
-                    }
-                  }
-                }
-              ]
-            }
-        - eksId: !Select [4, !Split ["/", !Ref providerURL]]
-          eksEndpoint: !Select [1, !Split ["//", !Ref providerURL]]
-          eksId2: !Select [4, !Split ["/", !Ref providerURL2]]
-          eksEndpoint2: !Select [1, !Split ["//", !Ref providerURL2]]
+        - "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"\
+          Effect\": \"Allow\",\n      \"Principal\": {\n        \"Federated\": \"\
+          arn:aws:iam::${AWS::AccountId}:oidc-provider/oidc.eks.${AWS::Region}.amazonaws.com/id/${eksId}\"\
+          \n      },\n      \"Action\": \"sts:AssumeRoleWithWebIdentity\",\n     \
+          \ \"Condition\": {\n        \"StringEquals\": {\n          \"${eksEndpoint}:sub\"\
+          : \"system:serviceaccount:${K8Namespace}:${ServiceAccountName}\"\n\
+          \        }\n      }\n    }\n  ]\n}\n"
+        - eksId:
+            Fn::Select:
+            - 4
+            - Fn::Split:
+              - /
+              - Ref: providerURL
+          eksEndpoint:
+            Fn::Select:
+            - 1
+            - Fn::Split:
+              - //
+              - Ref: providerURL
       Policies:
       - PolicyName: OIDCRoleGoLedgerPolicy
         PolicyDocument:

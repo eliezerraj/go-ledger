@@ -1,0 +1,56 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: spot
+spec:
+  disruption:
+    budgets:
+    - nodes: 50%
+    - duration: 14h
+      nodes: "0"
+      schedule: 0 8 * * *
+    consolidateAfter: 2m
+    consolidationPolicy: WhenEmptyOrUnderutilized
+  limits:
+    cpu: 20
+    memory: 40Gi
+  template:
+    spec:
+      expireAfter: 720h
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: al2
+      requirements:
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values:
+        - spot
+      - key: capacity-spread
+        operator: In
+        values:
+        - "2"
+      - key: kubernetes.io/arch
+        operator: In
+        values:
+        - amd64
+      - key: topology.kubernetes.io/zone #Varia conforme o ambiente
+        operator: In
+        values:
+          - us-east-2a 
+          - us-east-2b
+          - us-east-2c
+      - key: karpenter.k8s.aws/instance-category
+        operator: In
+        values:
+          - t
+          - m
+          - c
+      - key: karpenter.k8s.aws/instance-size
+        operator: In
+        values:
+          - nano
+          - small
+          - medium
+          - large
+      terminationGracePeriod: 5m
