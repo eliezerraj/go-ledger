@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-spot
+  name: nginx-spot
+  annotations:
+    karpenter.sh/do-not-disrupt: "true"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-spot
+  template:
+    metadata:
+      labels:
+        app: nginx-spot
+    spec:
+      containers:
+      - image: nginx
+        name: nginx-spot
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+
+      # Isso garante que os pods serão provisionados somente em Spot em modo "Hard" #
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: karpenter.sh/capacity-type
+                  operator: "In"
+                  values: ["spot"]

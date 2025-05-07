@@ -1,0 +1,73 @@
+apiVersion: v1
+data:
+  mapRoles: |
+    - groups:
+      - cluster-operator-access-profile
+      rolearn: arn:aws:iam::233772794730:role/AWSReservedSSO_SRE_171691a3106c6188
+      username: AWSReservedSSO_SRE_171691a3106c6188
+    - groups:
+      - read-only-access-profile
+      rolearn: arn:aws:iam::233772794730:role/AWSReservedSSO_PowerUser_1042b02331bf43d4
+      username: AWSReservedSSO_PowerUser_1042b02331bf43d4
+    - groups:
+      - system:masters
+      rolearn: arn:aws:iam::233772794730:role/AWSReservedSSO_AWSPowerUserAccess_686f210cb77c296f
+      username: AWSReservedSSO_AWSPowerUserAccess_686f210cb77c296f
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      - system:node-proxier
+      rolearn: arn:aws:iam::233772794730:role/FargatePodExecutionRole-munin-eks-hml
+      username: system:node:{{SessionName}}
+    - groups:
+      - cluster-operator-access-profile
+      rolearn: arn:aws:iam::233772794730:role/AWSReservedSSO_Cloud-Aws_512db399c367b84f
+      username: AWSReservedSSO_Cloud-Aws_512db399c367b84f
+    - groups:
+      - cluster-operator-access-profile
+      rolearn: arn:aws:iam::233772794730:role/RundeckAccess
+      username: RundeckAccess
+    - groups:
+      - cluster-operator-access-profile
+      rolearn: arn:aws:iam::233772794730:role/AWSReservedSSO_TechLeadsAccess_a8c28af783263090
+      username: AWSReservedSSO_TechLeadsAccess_a8c28af783263090
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: arn:aws:iam::233772794730:role/KarpenterNodeRole-munin-eks-hml
+      username: system:node:{{EC2PrivateDNSName}}
+    - groups:
+      - cluster-operator-access-profile
+      rolearn: arn:aws:iam::233772794730:role/CDAccess
+      username: CDAccess
+    - groups:
+      - cluster-operator-access-profile
+      rolearn: arn:aws:iam::233772794730:role/RoleChatBotHarryBotter
+      username: RoleChatBotHarryBotter
+  mapUsers: |
+    []
+kind: ConfigMap
+metadata:
+  creationTimestamp: '2022-05-02T16:01:53Z'
+  managedFields:
+    - apiVersion: v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:data:
+          f:mapUsers: {}
+      manager: aws-auth
+      operation: Update
+      time: '2024-06-07T14:53:06Z'
+    - apiVersion: v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:data:
+          .: {}
+          f:mapRoles: {}
+      manager: vpcLambda
+      operation: Update
+      time: '2025-03-21T16:57:46Z'
+  name: aws-auth
+  namespace: kube-system
+  resourceVersion: '745466457'
+  uid: b48fae9c-e194-4efa-a7fb-cee7b3ec9a73

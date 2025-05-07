@@ -1,0 +1,68 @@
+# Default NodeClass to provisione EC2 Nodes Amazon Linux 2 #
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: al2
+  annotations:
+    helm.sh/hook: post-install
+spec:
+  kubelet:
+    podsPerCore: 2
+    maxPods: 20
+    systemReserved:
+        cpu: 100m
+        memory: 100Mi
+        ephemeral-storage: 1Gi
+    kubeReserved:
+        cpu: 200m
+        memory: 100Mi
+        ephemeral-storage: 3Gi
+    evictionHard:
+        memory.available: 5%
+        nodefs.available: 10%
+        nodefs.inodesFree: 10%
+    evictionSoft:
+        memory.available: 500Mi
+        nodefs.available: 15%
+        nodefs.inodesFree: 15%
+    evictionSoftGracePeriod:
+        memory.available: 1m
+        nodefs.available: 1m30s
+        nodefs.inodesFree: 2m
+    evictionMaxPodGracePeriod: 60
+    imageGCHighThresholdPercent: 85
+    imageGCLowThresholdPercent: 80
+    cpuCFSQuota: true
+  amiSelectorTerms:
+      - id: ami-01face754fdc60485 #ohio
+      - id: ami-016e80ea1d0bc081f #sp
+  amiFamily: AL2 # Amazon Linux 2
+  instanceProfile: KarpenterNodeInstanceProfile-arch-eks-01-02 # this IAM Role needs be set in aws-auth configmap.
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "true"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/security-group: arch-eks-01-02
+  metadataOptions:
+    httpEndpoint: enabled
+    httpProtocolIPv6: disabled
+    httpPutResponseHopLimit: 2
+    httpTokens: required        
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 20Gi
+        volumeType: gp3
+        deleteOnTermination: true
+  tags:
+    cluster: arch-eks-01-02
+    service: go-ledger
+    squad: architecture
+  userData: |
+    #!/bin/bash
+    echo "Installing SSM Agent"
+    yum update -y
+    yum install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
