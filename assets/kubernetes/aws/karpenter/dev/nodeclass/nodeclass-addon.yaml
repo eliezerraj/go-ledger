@@ -1,0 +1,46 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  annotations:
+    name: addons
+    helm.sh/hook: post-install,post-upgrade
+spec:
+  amiFamily: AL2
+  amiSelectorTerms:
+    - id: ami-01face754fdc60485
+    - id: ami-016e80ea1d0bc081f
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        deleteOnTermination: true
+        volumeSize: 20Gi
+        volumeType: gp3
+  instanceProfile: KarpenterNodeInstanceProfile-arch-eks-01-02
+  metadataOptions:
+    httpEndpoint: enabled
+    httpProtocolIPv6: disabled
+    httpPutResponseHopLimit: 2
+    httpTokens: required
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/security-group: arch-eks-01-02
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: 'true'
+  tags:
+    cluster: arch-eks-01-02
+    service: go-global
+    squad: architecture
+  userData: >
+    #!/bin/bash
+
+    echo "Installing SSM Agent"
+
+    yum update -y
+
+    yum install -y
+    https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
+
+    systemctl enable amazon-ssm-agent
+
+    systemctl start amazon-ssm-agent
