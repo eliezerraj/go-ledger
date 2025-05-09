@@ -290,9 +290,9 @@ Resources:
       WebACLArn:
         Ref: WafaclArn
 
-Outputs:
-  ApiPublicGoLedgerGateway:
-    Value:
-      Ref: ApiPublicGoLedgerGateway
-    Export:
-      Name: ApiPublicGoLedgerGateway
+#Outputs:
+#  ApiPublicGoLedgerGateway:
+#    Value:
+#      Ref: ApiPublicGoLedgerGateway
+#    Export:
+#      Name: ApiPublicGoLedgerGateway

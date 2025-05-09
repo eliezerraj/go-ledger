@@ -4,26 +4,13 @@ kind: EC2NodeClass
 metadata:
   name: bottlerocket
   annotations:
-    helm.sh/hook: post-install
+    helm.sh/hook: post-install, post-upgrade
 spec:
-  kubelet:
-    maxPods: 20
-    systemReserved:
-        cpu: 100m
-        memory: 100Mi
-        ephemeral-storage: 1Gi
-    evictionHard:
-        memory.available: 5%
-        nodefs.available: 10%
-        nodefs.inodesFree: 10%
-    imageGCHighThresholdPercent: 85
-    imageGCLowThresholdPercent: 80
-    cpuCFSQuota: true
   amiSelectorTerms:
       - id: ami-04ba2191c69d4b603 #sp
       - id: ami-05bf4b522f9d46749 #ohio
   amiFamily: Bottlerocket
-  instanceProfile: KarpenterNodeInstanceProfile-munin-eks-hml # this IAM Role needs be set in aws-auth configmap.
+  instanceProfile: KarpenterNodeInstanceProfile-arch-eks-01-02 # this IAM Role needs be set in aws-auth configmap.
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "true"
@@ -49,7 +36,7 @@ spec:
         encrypted: true
   tags:
     cluster: arch-eks-01-02
-    service: go-ledger
+    service: go-global
     squad: architecture
   userData: |
     [settings.bootstrap-containers.cis-bootstrap]

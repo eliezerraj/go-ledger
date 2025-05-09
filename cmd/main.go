@@ -15,12 +15,14 @@ import(
 	"github.com/go-ledger/internal/adapter/database"
 
 	"github.com/go-ledger/internal/adapter/event"
+	
 	go_core_pg "github.com/eliezerraj/go-core/database/pg"
+	go_core_api "github.com/eliezerraj/go-core/api"
 )
 
 var(
 	logLevel = 	zerolog.InfoLevel // zerolog.InfoLevel zerolog.DebugLevel
-	appServer	model.AppServer
+	appServer			model.AppServer
 	databaseConfig 		go_core_pg.DatabaseConfig
 	databasePGServer 	go_core_pg.DatabasePGServer
 	
@@ -35,14 +37,14 @@ func init(){
 	infoPod, server := configuration.GetInfoPod()
 	configOTEL 		:= configuration.GetOtelEnv()
 	databaseConfig 	:= configuration.GetDatabaseEnv() 
-	apiService 	:= configuration.GetEndpointEnv() 
+	apiEndpoint	 	:= configuration.GetEndpointEnv() 
 	kafkaConfigurations, topics := configuration.GetKafkaEnv() 
 
 	appServer.InfoPod = &infoPod
 	appServer.Server = &server
 	appServer.ConfigOTEL = &configOTEL
 	appServer.DatabaseConfig = &databaseConfig
-	appServer.ApiService = apiService
+	appServer.ApiService = apiEndpoint
 	appServer.KafkaConfigurations = &kafkaConfigurations
 	appServer.Topics = topics
 }
@@ -80,11 +82,15 @@ func main (){
 		childLogger.Error().Err(err).Send()
 	}
 	
+	// Create a go-core api service for client http
+	coreRestApiService := go_core_api.NewRestApiService()
+
 	// wire	
 	database := database.NewWorkerRepository(&databasePGServer)
-	workerService := service.NewWorkerService(database, 
-											appServer.ApiService, 
-											workerEvent )
+	workerService := service.NewWorkerService(	*coreRestApiService,
+												database,
+												appServer.ApiService, 
+												workerEvent )
 	httpRouters := api.NewHttpRouters(workerService)
 
 	// start server

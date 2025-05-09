@@ -5,15 +5,12 @@ metadata:
 spec:
   disruption:
     budgets:
-    - nodes: 50%
-    - duration: 14h
-      nodes: "0"
-      schedule: 0 8 * * *
+    - nodes: 10%
     consolidateAfter: 2m
     consolidationPolicy: WhenEmptyOrUnderutilized
   limits:
-    cpu: 20
-    memory: 40Gi
+    cpu: 100
+    memory: 1000Gi
   template:
     spec:
       expireAfter: 720h
@@ -29,11 +26,16 @@ spec:
       - key: capacity-spread
         operator: In
         values:
-        - "2"
+        - 1-s
+        - 2-s
+        - 3-s
+        - 4-s
+        - 5-s
       - key: kubernetes.io/arch
         operator: In
         values:
         - amd64
+        - arm64
       - key: topology.kubernetes.io/zone #Varia conforme o ambiente
         operator: In
         values:
@@ -49,7 +51,7 @@ spec:
       - key: karpenter.k8s.aws/instance-size
         operator: In
         values:
-          - nano
+          #- nano
           - small
           - medium
           - large
