@@ -26,22 +26,25 @@ import(
 
 var tracerProvider go_core_observ.TracerProvider
 var childLogger = log.With().Str("component","go-ledger").Str("package","internal.core.service").Logger()
-var apiService go_core_api.ApiService
+var apiService 	go_core_api.ApiService
 
 type WorkerService struct {
-	apiService			[]model.ApiService
-	workerRepository 	*database.WorkerRepository
-	workerEvent			*event.WorkerEvent
+	goCoreRestApiService	go_core_api.ApiService
+	apiService				[]model.ApiService
+	workerRepository 		*database.WorkerRepository
+	workerEvent				*event.WorkerEvent
 }
 
 // About create a new worker service
-func NewWorkerService(	workerRepository *database.WorkerRepository,
-						apiService		[]model.ApiService,
-						workerEvent	*event.WorkerEvent,
+func NewWorkerService(	goCoreRestApiService	go_core_api.ApiService,	
+						workerRepository 		*database.WorkerRepository,
+						apiService				[]model.ApiService,
+						workerEvent				*event.WorkerEvent,
 						) *WorkerService{
 	childLogger.Info().Str("func","NewWorkerService").Send()
 
 	return &WorkerService{
+		goCoreRestApiService: goCoreRestApiService,
 		apiService: apiService,
 		workerRepository: workerRepository,
 		workerEvent: workerEvent,
@@ -133,9 +136,10 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 		Timeout: 15,
 		Headers: &headers,
 	}
-	_, statusCode, err := apiService.CallRestApi(ctx,
-												httpClient, 
-												nil)
+	_, statusCode, err := apiService.CallRestApiV1(	ctx,
+													s.goCoreRestApiService.Client,
+													httpClient, 
+													nil)
 	if err != nil {
 		return nil, errorStatusCode(statusCode, s.apiService[0].Name)
 	}
@@ -148,9 +152,10 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 		Headers: &headers,
 	}
 
-	_, statusCode, err = apiService.CallRestApi(ctx,
-												httpClient, 
-												nil)
+	_, statusCode, err = apiService.CallRestApiV1(	ctx,
+													s.goCoreRestApiService.Client,
+													httpClient, 
+													nil)
 	if err != nil {
 		return nil, errorStatusCode(statusCode, s.apiService[0].Name)
 	}

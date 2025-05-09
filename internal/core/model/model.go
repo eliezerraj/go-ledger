@@ -12,8 +12,8 @@ type AppServer struct {
 	Server     		*Server     				`json:"server"`
 	ConfigOTEL		*go_core_observ.ConfigOTEL	`json:"otel_config"`
 	DatabaseConfig	*go_core_pg.DatabaseConfig  `json:"database"`
-	ApiService 		[]ApiService	`json:"api_endpoints"`
-	KafkaConfigurations	*go_core_event.KafkaConfigurations  `json:"kafka_configurations"`
+	ApiService 		[]ApiService				`json:"api_endpoints"`
+	KafkaConfigurations							*go_core_event.KafkaConfigurations  `json:"kafka_configurations"`
 	Topics 			[]string					`json:"topics"`		
 }
 
