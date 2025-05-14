@@ -8,6 +8,7 @@ import(
 	"net/http"
 	"strconv"
 	"encoding/json"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 
@@ -33,14 +34,14 @@ type WorkerService struct {
 	apiService				[]model.ApiService
 	workerRepository 		*database.WorkerRepository
 	workerEvent				*event.WorkerEvent
+	mutex    				sync.Mutex
 }
 
 // About create a new worker service
 func NewWorkerService(	goCoreRestApiService	go_core_api.ApiService,	
 						workerRepository 		*database.WorkerRepository,
 						apiService				[]model.ApiService,
-						workerEvent				*event.WorkerEvent,
-						) *WorkerService{
+						workerEvent				*event.WorkerEvent,) *WorkerService{
 	childLogger.Info().Str("func","NewWorkerService").Send()
 
 	return &WorkerService{
@@ -48,6 +49,7 @@ func NewWorkerService(	goCoreRestApiService	go_core_api.ApiService,
 		apiService: apiService,
 		workerRepository: workerRepository,
 		workerEvent: workerEvent,
+		mutex:    sync.Mutex{},
 	}
 }
 
@@ -253,6 +255,10 @@ func(s *WorkerService) ProducerEventKafka(ctx context.Context, moviment model.Mo
 	defer span.End()
 	
 	trace_id := fmt.Sprintf("%v",ctx.Value("trace-request-id"))
+
+	// create a mutex to avoid commit over a transaction on air
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
 	// Create a transacrion
 	err = s.workerEvent.WorkerKafka.BeginTransaction()
