@@ -12,7 +12,7 @@ func GetEndpointEnv() []model.ApiService {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		childLogger.Error().Err(err).Send()
+		childLogger.Info().Err(err).Send()
 	}
 	
 	var apiService []model.ApiService
