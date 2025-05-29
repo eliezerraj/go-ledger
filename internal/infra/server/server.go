@@ -131,9 +131,23 @@ func (h HttpServer) StartHttpAppServer(	ctx context.Context,
 		}
 	}()
 
+	// Get SIGNALS
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-	<-ch
+	signal.Notify(ch, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+
+	for {
+		sig := <-ch
+
+		switch sig {
+		case syscall.SIGHUP:
+			childLogger.Info().Msg("Received SIGHUP: reloading configuration...")
+		case syscall.SIGINT, syscall.SIGTERM:
+			childLogger.Info().Msg("Received SIGINT/SIGTERM termination signal. Exiting")
+			return
+		default:
+			childLogger.Info().Interface("Received signal:", sig).Send()
+		}
+	}
 
 	if err := srv.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
 		childLogger.Error().Err(err).Msg("warning dirty shutdown !!!")
