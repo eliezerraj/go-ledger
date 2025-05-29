@@ -76,26 +76,26 @@ jobs:
         run: |
           case "${{ github.ref }}" in
             "refs/heads/main")
-              echo "AWS_ACCOUNT_ID=992382474575"  >> "$GITHUB_OUTPUT" # TODO Variaveis de conta em nível de org?
+              echo "AWS_ACCOUNT_ID=908671954593"  >> "$GITHUB_OUTPUT" # TODO Variaveis de conta em nível de org?
               echo "AWS_REGION=us-east-2"         >> "$GITHUB_OUTPUT"
               echo "ENVIRONMENT=dev"              >> "$GITHUB_OUTPUT"
-              echo "CLUSTER_NAME=arch-eks-02"    >> "$GITHUB_OUTPUT"
+              echo "CLUSTER_NAME=arch-eks-01"    >> "$GITHUB_OUTPUT"
               echo "CLUSTER_NAMESPACE=test-a"   >> "$GITHUB_OUTPUT"              
               echo "CLOUDFORMATION_TEMPLATE_PARAMETERS_PATH=file://${{ github.workspace }}/assets/cloudformation/parameter/dev.json" >> "$GITHUB_OUTPUT"
               ;;
             refs/heads/master)
-              echo "AWS_ACCOUNT_ID=992382474575"  >> "$GITHUB_OUTPUT"
+              echo "AWS_ACCOUNT_ID=908671954593"  >> "$GITHUB_OUTPUT"
               echo "AWS_REGION=us-east-2"           >> "$GITHUB_OUTPUT"
               echo "ENVIRONMENT=dev"                >> "$GITHUB_OUTPUT"
-              echo "CLUSTER_NAME==arch-eks-02"      >> "$GITHUB_OUTPUT"
+              echo "CLUSTER_NAME==arch-eks-01"      >> "$GITHUB_OUTPUT"
               echo "CLUSTER_NAMESPACE=test-a"     >> "$GITHUB_OUTPUT"
               echo "CLOUDFORMATION_TEMPLATE_PARAMETERS_PATH=file://${{ github.workspace }}/assets/cloudformation/parameter/dev.json" >> "$GITHUB_OUTPUT"
               ;;
             *)
-              echo "AWS_ACCOUNT_ID=992382474575"  >> "$GITHUB_OUTPUT"
+              echo "AWS_ACCOUNT_ID=908671954593"  >> "$GITHUB_OUTPUT"
               echo "AWS_REGION=us-east-2"         >> "$GITHUB_OUTPUT"
               echo "ENVIRONMENT=dev"              >> "$GITHUB_OUTPUT"
-              echo "CLUSTER_NAME=arch-eks-02"    >> "$GITHUB_OUTPUT"
+              echo "CLUSTER_NAME=arch-eks-01"    >> "$GITHUB_OUTPUT"
               echo "CLUSTER_NAMESPACE=test-a"   >> "$GITHUB_OUTPUT"
               echo "CLOUDFORMATION_TEMPLATE_PARAMETERS_PATH=file://${{ github.workspace }}/assets/cloudformation/parameter/dev.json" >> "$GITHUB_OUTPUT"   
               ;;
