@@ -186,4 +186,4 @@ jobs:
           kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f ${{ needs.setup-environment.outputs.KUBERNETES_MANIFEST_PATH }}/hpa.yaml
           kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f assets/kubernetes/aws/ing.yaml
           kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f assets/kubernetes/aws/pod-disruption.yaml
-          kubectl rollout restart deployment/go-oauth --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }}
+          kubectl rollout restart deployment/go-ledger --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }}
