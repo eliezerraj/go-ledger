@@ -20,7 +20,11 @@ env:
 defaults:
   run:
     shell: bash
-    
+
+permissions:
+  id-token: write   # Isso é necessário para solicitar o JWT
+  contents: read    # Isso é necessário para ações/checkout    
+
 jobs:
   setup-environment:
     uses: ./.github/workflows/setup-environment.yaml
@@ -63,13 +67,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials - OIDC
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::908671954593:role/oidc-gitaction
           aws-region: ${{ needs.setup-environment.outputs.AWS_REGION }}
+
+      - name: Sts GetCallerIdentity
+        run: |
+          aws sts get-caller-identity
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -101,13 +107,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials - OIDC
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::908671954593:role/oidc-gitaction
           aws-region: ${{ needs.setup-environment.outputs.AWS_REGION }}
+
+      - name: Sts GetCallerIdentity
+        run: |
+          aws sts get-caller-identity
 
       - name: Execute Cloudformation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
@@ -139,13 +147,15 @@ jobs:
         with:
           version: 'latest'
                  
-      - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials - OIDC
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::908671954593:role/oidc-gitaction
           aws-region: ${{ needs.setup-environment.outputs.AWS_REGION }}
+
+      - name: Sts GetCallerIdentity
+        run: |
+          aws sts get-caller-identity
 
       - name: Update kubernetes manifest files
         env:
