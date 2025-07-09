@@ -18,6 +18,7 @@ func GetKafkaEnv() (go_core_event.KafkaConfigurations, []string) {
 	}
 
 	var kafkaConfigurations go_core_event.KafkaConfigurations
+	kafkaConfigurations.RequiredAcks = 1
 
 	if os.Getenv("KAFKA_USER") !=  "" {
 		kafkaConfigurations.Username = os.Getenv("KAFKA_USER")
