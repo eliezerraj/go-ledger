@@ -54,7 +54,7 @@ func NewWorkerService(	goCoreRestApiService	go_core_api.ApiService,
 }
 
 // About handle/convert http status code
-func errorStatusCode(statusCode int, serviceName string) error{
+func errorStatusCode(statusCode int, serviceName string, msg_err error) error{
 	childLogger.Info().Str("func","errorStatusCode").Interface("serviceName", serviceName).Interface("statusCode", statusCode).Send()
 	var err error
 	switch statusCode {
@@ -65,7 +65,7 @@ func errorStatusCode(statusCode int, serviceName string) error{
 		case http.StatusNotFound:
 			err = erro.ErrNotFound
 		default:
-			err = errors.New(fmt.Sprintf("service %s in outage", serviceName))
+			err = errors.New(fmt.Sprintf("service %s in outage => cause error: %s", serviceName, msg_err.Error() ))
 		}
 	return err
 }
@@ -143,7 +143,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 													httpClient, 
 													nil)
 	if err != nil {
-		return nil, errorStatusCode(statusCode, s.apiService[0].Name)
+		return nil, errorStatusCode(statusCode, s.apiService[0].Name, err)
 	}
 
 	// check account_from
@@ -159,7 +159,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 													httpClient, 
 													nil)
 	if err != nil {
-		return nil, errorStatusCode(statusCode, s.apiService[0].Name)
+		return nil, errorStatusCode(statusCode, s.apiService[0].Name, err)
 	}
 
 	// create a ledger transaction

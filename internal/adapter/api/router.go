@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+	"time"
+	"context"
 	"encoding/json"
 	"reflect"
 	"net/http"
@@ -29,14 +31,17 @@ var tracerProvider 	go_core_observ.TracerProvider
 
 type HttpRouters struct {
 	workerService 	*service.WorkerService
+	ctxTimeout		time.Duration
 }
 
 // Above create routers
-func NewHttpRouters(workerService *service.WorkerService) HttpRouters {
+func NewHttpRouters(workerService *service.WorkerService,
+					ctxTimeout	time.Duration) HttpRouters {
 	childLogger.Info().Str("func","NewHttpRouters").Send()
 
 	return HttpRouters{
 		workerService: workerService,
+		ctxTimeout: ctxTimeout,
 	}
 }
 
@@ -82,10 +87,13 @@ func (h *HttpRouters) Stat(rw http.ResponseWriter, req *http.Request) {
 func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Request) error {
 	childLogger.Info().Str("func","MovimentTransaction").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
 	
-	span := tracerProvider.Span(req.Context(), "adapter.api.MovimentTransaction")
+	ctx, cancel := context.WithTimeout(req.Context(), h.ctxTimeout * time.Second)
+    defer cancel()
+
+	span := tracerProvider.Span(ctx, "adapter.api.MovimentTransaction")
 	defer span.End()
 
-	trace_id := fmt.Sprintf("%v",req.Context().Value("trace-request-id"))
+	trace_id := fmt.Sprintf("%v", ctx.Value("trace-request-id"))
 
 	moviment := model.Moviment{}
 	err := json.NewDecoder(req.Body).Decode(&moviment)
@@ -95,7 +103,7 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
     }
 	defer req.Body.Close()
 
-	res, err := h.workerService.MovimentTransaction(req.Context(), moviment)
+	res, err := h.workerService.MovimentTransaction(ctx, moviment)
 	if err != nil {
 		switch err {
 		case erro.ErrNotFound:
@@ -113,11 +121,14 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
 func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *http.Request) error {
 	childLogger.Info().Str("func","GetAccountMovimentStatement").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
 
+	ctx, cancel := context.WithTimeout(req.Context(), h.ctxTimeout * time.Second)
+    defer cancel()
+
 	// trace
-	span := tracerProvider.Span(req.Context(), "adapter.api.GetAccountMovimentStatement")
+	span := tracerProvider.Span(ctx, "adapter.api.GetAccountMovimentStatement")
 	defer span.End()
 
-	trace_id := fmt.Sprintf("%v",req.Context().Value("trace-request-id"))
+	trace_id := fmt.Sprintf("%v", ctx.Value("trace-request-id"))
 
 	//parameters
 	vars := mux.Vars(req)
@@ -127,7 +138,7 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 	moviment.AccountFrom = model.Account{AccountID: varID}
 
 	// call service
-	res, err := h.workerService.GetAccountStament(req.Context(), moviment)
+	res, err := h.workerService.GetAccountStament(ctx, moviment)
 	if err != nil {
 		switch err {
 		case erro.ErrNotFound:
@@ -145,11 +156,14 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter, req *http.Request) error {
 	childLogger.Info().Str("func","GetAccountMovimentStatementPerDate").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
 
+	ctx, cancel := context.WithTimeout(req.Context(), h.ctxTimeout * time.Second)
+    defer cancel()
+
 	// trace
-	span := tracerProvider.Span(req.Context(), "adapter.api.GetAccountMovimentStatementPerDate")
+	span := tracerProvider.Span(ctx, "adapter.api.GetAccountMovimentStatementPerDate")
 	defer span.End()
 
-	trace_id := fmt.Sprintf("%v",req.Context().Value("trace-request-id"))
+	trace_id := fmt.Sprintf("%v", ctx.Value("trace-request-id"))
 
 	//parameters
 	params := req.URL.Query()
@@ -166,7 +180,7 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 								TransactionAt: convertDate}
 
 	// call service
-	res, err := h.workerService.GetAccountMovimentStatementPerDate(req.Context(), moviment)
+	res, err := h.workerService.GetAccountMovimentStatementPerDate(ctx, moviment)
 	if err != nil {
 		switch err {
 		case erro.ErrNotFound:
