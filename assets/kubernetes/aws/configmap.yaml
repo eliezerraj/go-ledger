@@ -15,6 +15,7 @@ data:
   DB_SCHEMA: "public"
   DB_DRIVER: "postgres"
   DB_MAX_CONNECTION: "80"
+  CTX_TIMEOUT: "5"
   SETPOD_AZ: "false"
   ENV: "dev"
 

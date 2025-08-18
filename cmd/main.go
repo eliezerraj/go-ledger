@@ -91,7 +91,7 @@ func main (){
 												database,
 												appServer.ApiService, 
 												workerEvent )
-	httpRouters := api.NewHttpRouters(workerService)
+	httpRouters := api.NewHttpRouters(workerService, time.Duration(appServer.Server.CtxTimeout))
 
 	// start server
 	httpServer := server.NewHttpAppServer(appServer.Server)
