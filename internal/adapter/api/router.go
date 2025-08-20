@@ -87,9 +87,11 @@ func (h *HttpRouters) Stat(rw http.ResponseWriter, req *http.Request) {
 func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Request) error {
 	childLogger.Info().Str("func","MovimentTransaction").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
 	
+	//context
 	ctx, cancel := context.WithTimeout(req.Context(), h.ctxTimeout * time.Second)
     defer cancel()
 
+	//trace
 	span := tracerProvider.Span(ctx, "adapter.api.MovimentTransaction")
 	defer span.End()
 
@@ -121,6 +123,7 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
 func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *http.Request) error {
 	childLogger.Info().Str("func","GetAccountMovimentStatement").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
 
+	//context
 	ctx, cancel := context.WithTimeout(req.Context(), h.ctxTimeout * time.Second)
     defer cancel()
 
@@ -156,6 +159,7 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter, req *http.Request) error {
 	childLogger.Info().Str("func","GetAccountMovimentStatementPerDate").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
 
+	//context
 	ctx, cancel := context.WithTimeout(req.Context(), h.ctxTimeout * time.Second)
     defer cancel()
 
