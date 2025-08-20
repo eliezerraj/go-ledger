@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"reflect"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
-
 	"github.com/rs/zerolog/log"
 
 	"github.com/go-ledger/internal/core/service"
@@ -107,9 +107,14 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
 
 	res, err := h.workerService.MovimentTransaction(ctx, moviment)
 	if err != nil {
+		if strings.Contains(err.Error(), "context deadline exceeded") {
+    		err = erro.ErrTimeout
+		} 
 		switch err {
 		case erro.ErrNotFound:
 			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
+		case erro.ErrTimeout:
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusGatewayTimeout)
 		default:
 			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
 		}
@@ -143,9 +148,14 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 	// call service
 	res, err := h.workerService.GetAccountStament(ctx, moviment)
 	if err != nil {
+		if strings.Contains(err.Error(), "context deadline exceeded") {
+    		err = erro.ErrTimeout
+		} 
 		switch err {
 		case erro.ErrNotFound:
 			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
+		case erro.ErrTimeout:
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusGatewayTimeout)
 		default:
 			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
 		}
@@ -186,9 +196,14 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 	// call service
 	res, err := h.workerService.GetAccountMovimentStatementPerDate(ctx, moviment)
 	if err != nil {
+		if strings.Contains(err.Error(), "context deadline exceeded") {
+    		err = erro.ErrTimeout
+		} 
 		switch err {
 		case erro.ErrNotFound:
 			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
+		case erro.ErrTimeout:
+			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusGatewayTimeout)
 		default:
 			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
 		}
