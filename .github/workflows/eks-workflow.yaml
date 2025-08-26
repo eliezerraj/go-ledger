@@ -179,7 +179,7 @@ jobs:
           done
 
           # Show all contect.
-          cat $KUBERNETES_MANIFEST_PATH/configmap.yaml         
+          cat $KUBERNETES_MANIFEST_PATH/configmap-02.yaml         
 
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name ${{ needs.setup-environment.outputs.CLUSTER_NAME }} --region ${{ needs.setup-environment.outputs.AWS_REGION }}
@@ -191,7 +191,7 @@ jobs:
         run: |
           kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f ${{ needs.setup-environment.outputs.KUBERNETES_MANIFEST_PATH }}/configmap-02.yaml
           kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f ${{ needs.setup-environment.outputs.KUBERNETES_MANIFEST_PATH }}/service-account.yaml
-          kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f ${{ needs.setup-environment.outputs.KUBERNETES_MANIFEST_PATH }}/deployment.yaml
+          kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f ${{ needs.setup-environment.outputs.KUBERNETES_MANIFEST_PATH }}/deployment-02.yaml
           kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f ${{ needs.setup-environment.outputs.KUBERNETES_MANIFEST_PATH }}/svc.yaml
           kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f ${{ needs.setup-environment.outputs.KUBERNETES_MANIFEST_PATH }}/hpa.yaml
           kubectl apply --kubeconfig /home/runner/.kube/config --validate=false --validate=false --namespace=${{ needs.setup-environment.outputs.CLUSTER_NAMESPACE }} -f ${{ needs.setup-environment.outputs.KUBERNETES_MANIFEST_PATH }}/ing.yaml
