@@ -79,7 +79,7 @@ spec:
         lifecycle:
           preStop:
             exec:
-              command: ["/bin/sh","-c","sleep 2"]
+              command: ["/bin/sh","-c","sleep 5"]
       terminationGracePeriodSeconds: 60
       affinity:
         podAntiAffinity:
