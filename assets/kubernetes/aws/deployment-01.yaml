@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: &app-name go-ledger
+  namespace: test-a
+  labels:
+    app: *app-name
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: *app-name
+  template:
+    metadata:
+      labels:
+        app: *app-name
+    spec:
+      serviceAccountName: sa-go-ledger
+      volumes:
+      - name: volume-secret
+        secret:
+          secretName: es-rds-arch-secret-go-ledger
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 2000
+        fsGroup: 3000
+      containers:
+      - name: *app-name
+        image: 908671954593.dkr.ecr.us-east-2.amazonaws.com/go-ledger:latest
+        envFrom:
+        - configMapRef:
+            name: go-ledger-cm
+        volumeMounts:
+          - mountPath: "/var/pod/secret"
+            name: volume-secret
+            readOnly: true
+        resources:
+           requests:
+             cpu: 100m
+             memory: 100Mi
+           limits:
+             cpu: 400m
+             memory: 200Mi
+        securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 1100
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 6003
+          protocol: TCP
+        readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 30
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 10
+        livenessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - "ps -A | grep go-ledger | grep -v grep"
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh","-c","sleep 5"]
+      terminationGracePeriodSeconds: 60
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                topologyKey: topology.kubernetes.io/zone
+                labelSelector:
+                  matchLabels:
+                    app: *app-name
+              weight: 100
