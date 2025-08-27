@@ -40,8 +40,9 @@ type ApiService struct {
 	Name			string `json:"name_service"`
 	Url				string `json:"url"`
 	Method			string `json:"method"`
-	XApigwApiId		string `json:"x-apigw-api-id"`
+	XApigwApiId		string `json:"x-apigw-api-id,omitempty"`
 	HostName		string `json:"host_name"`
+	HttpTimeout		time.Duration `json:"httpTimeout"`
 }
 
 type MessageRouter struct {

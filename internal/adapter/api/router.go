@@ -83,6 +83,24 @@ func (h *HttpRouters) Stat(rw http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(rw).Encode(res)
 }
 
+// About handle error
+func (h *HttpRouters) ErrorHandler(trace_id string, err error) *coreJson.APIError {
+	if strings.Contains(err.Error(), "context deadline exceeded") {
+    	err = erro.ErrTimeout
+	} 
+	switch err {
+	case erro.ErrBadRequest:
+		core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusBadRequest)
+	case erro.ErrNotFound:
+		core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
+	case erro.ErrTimeout:
+		core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusGatewayTimeout)
+	default:
+		core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
+	}
+	return &core_apiError
+}
+
 // About add a moviment into ledger
 func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Request) error {
 	childLogger.Info().Str("func","MovimentTransaction").Interface("trace-resquest-id", req.Context().Value("trace-request-id")).Send()
@@ -100,25 +118,13 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
 	moviment := model.Moviment{}
 	err := json.NewDecoder(req.Body).Decode(&moviment)
     if err != nil {
-		core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusBadRequest)
-		return &core_apiError
+		return h.ErrorHandler(trace_id, erro.ErrBadRequest)
     }
 	defer req.Body.Close()
 
 	res, err := h.workerService.MovimentTransaction(ctx, moviment)
 	if err != nil {
-		if strings.Contains(err.Error(), "context deadline exceeded") {
-    		err = erro.ErrTimeout
-		} 
-		switch err {
-		case erro.ErrNotFound:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
-		case erro.ErrTimeout:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusGatewayTimeout)
-		default:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
-		}
-		return &core_apiError
+		return h.ErrorHandler(trace_id, err)
 	}
 	
 	return core_json.WriteJSON(rw, http.StatusOK, res)
@@ -148,18 +154,7 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 	// call service
 	res, err := h.workerService.GetAccountStament(ctx, moviment)
 	if err != nil {
-		if strings.Contains(err.Error(), "context deadline exceeded") {
-    		err = erro.ErrTimeout
-		} 
-		switch err {
-		case erro.ErrNotFound:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
-		case erro.ErrTimeout:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusGatewayTimeout)
-		default:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
-		}
-		return &core_apiError
+		return h.ErrorHandler(trace_id, err)
 	}
 	
 	return core_json.WriteJSON(rw, http.StatusOK, res)
@@ -186,8 +181,7 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 
 	convertDate, err := core_tools.ConvertToDate(varDate)
 	if err != nil {
-		core_apiError = core_apiError.NewAPIError(erro.ErrUnmarshal, trace_id,  http.StatusBadRequest)
-		return &core_apiError
+		return h.ErrorHandler(trace_id, erro.ErrBadRequest)
 	}
 
 	moviment := model.Moviment{ AccountFrom: model.Account{AccountID: varAcc},
@@ -196,18 +190,7 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 	// call service
 	res, err := h.workerService.GetAccountMovimentStatementPerDate(ctx, moviment)
 	if err != nil {
-		if strings.Contains(err.Error(), "context deadline exceeded") {
-    		err = erro.ErrTimeout
-		} 
-		switch err {
-		case erro.ErrNotFound:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusNotFound)
-		case erro.ErrTimeout:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusGatewayTimeout)
-		default:
-			core_apiError = core_apiError.NewAPIError(err, trace_id, http.StatusInternalServerError)
-		}
-		return &core_apiError
+		return h.ErrorHandler(trace_id, err)
 	}
 	
 	return core_json.WriteJSON(rw, http.StatusOK, res)

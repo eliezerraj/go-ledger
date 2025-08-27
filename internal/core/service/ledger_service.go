@@ -135,7 +135,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	httpClient := go_core_api.HttpClient {
 		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountFrom.AccountID,
 		Method: s.apiService[0].Method,
-		Timeout: 15,
+		Timeout: s.apiService[0].HttpTimeout,
 		Headers: &headers,
 	}
 	_, statusCode, err := apiService.CallRestApiV1(	ctx,
@@ -150,7 +150,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	httpClient = go_core_api.HttpClient {
 		Url: 	s.apiService[0].Url + "/get/" + moviment.AccountTo.AccountID,
 		Method: s.apiService[0].Method,
-		Timeout: 15,
+		Timeout: s.apiService[0].HttpTimeout,
 		Headers: &headers,
 	}
 
