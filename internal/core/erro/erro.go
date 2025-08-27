@@ -6,6 +6,7 @@ import (
 
 var (
 	ErrNotFound 		= errors.New("item not found")
+	ErrBadRequest 		= errors.New("bad request ! check parameters")
 	ErrTypeInvalid 		= errors.New("moviment type invalid")
 	ErrHTTPForbiden		= errors.New("forbiden request")
 	ErrUnauthorized 	= errors.New("not authorized")
