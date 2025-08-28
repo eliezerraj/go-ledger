@@ -22,12 +22,13 @@ import (
 	go_core_tools "github.com/eliezerraj/go-core/tools"
 )
 
-var childLogger = log.With().Str("component", "go-ledger").Str("package", "internal.adapter.api").Logger()
-
-var core_json 		coreJson.CoreJson
-var core_apiError 	coreJson.APIError
-var core_tools 		go_core_tools.ToolsCore
-var tracerProvider 	go_core_observ.TracerProvider
+var (
+	childLogger = log.With().Str("component", "go-ledger").Str("package", "internal.adapter.api").Logger()
+	core_json 		coreJson.CoreJson
+	core_apiError 	coreJson.APIError
+	core_tools 		go_core_tools.ToolsCore
+	tracerProvider 	go_core_observ.TracerProvider
+)
 
 type HttpRouters struct {
 	workerService 	*service.WorkerService

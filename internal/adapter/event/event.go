@@ -9,10 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var childLogger = log.With().Str("component","go-ledger").Str("package","internal.adapter.event").Logger()
-
-var tracerProvider go_core_observ.TracerProvider
-var producerWorker go_core_event.ProducerWorker
+var (
+	childLogger = log.With().Str("component","go-ledger").Str("package","internal.adapter.event").Logger()
+	tracerProvider go_core_observ.TracerProvider
+	producerWorker go_core_event.ProducerWorker
+)
 
 type WorkerEvent struct {
 	Topics				[]string

@@ -40,3 +40,4 @@ data:
   URL_SERVICE_00: "https://nlb-eks-arch-01.architecture.caradhras.io"
   METHOD_SERVICE_00: "GET"
   HOST_SERVICE_00: "go-account.architecture.caradhras.io"
+  CLIENT_HTTP_TIMEOUT_00: "5"

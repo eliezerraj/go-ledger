@@ -15,8 +15,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var tracerProvider go_core_observ.TracerProvider
-var childLogger = log.With().Str("component","go-ledger").Str("package","internal.adapter.database").Logger()
+var (
+	tracerProvider go_core_observ.TracerProvider
+	childLogger = log.With().Str("component","go-ledger").Str("package","internal.adapter.database").Logger()
+)
 
 type WorkerRepository struct {
 	DatabasePGServer *go_core_pg.DatabasePGServer
