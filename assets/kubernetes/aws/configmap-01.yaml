@@ -6,7 +6,7 @@ metadata:
   labels:
     app: *app-name
 data:
-  API_VERSION: "3.3"
+  API_VERSION: "3.5"
   POD_NAME: "go-ledger.eks-arch-01"
   PORT: "6003"
   DB_HOST: "rds-proxy-db-arch.proxy-couoacqalfwt.us-east-2.rds.amazonaws.com"
