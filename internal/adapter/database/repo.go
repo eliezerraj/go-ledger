@@ -15,8 +15,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var tracerProvider go_core_observ.TracerProvider
-var childLogger = log.With().Str("component","go-ledger").Str("package","internal.adapter.database").Logger()
+var (
+	tracerProvider go_core_observ.TracerProvider
+	childLogger = log.With().Str("component","go-ledger").Str("package","internal.adapter.database").Logger()
+)
 
 type WorkerRepository struct {
 	DatabasePGServer *go_core_pg.DatabasePGServer
@@ -169,7 +171,7 @@ func (w WorkerRepository) GetTransactionType(ctx context.Context, transactionTyp
 }
 
 // Above get the sum of all moviment (summary)
-func (w WorkerRepository) GetSumMovimentAccount(ctx context.Context, moviment model.Moviment) (*[]model.Moviment, error){
+func (w WorkerRepository) GetSumMovimentAccount(ctx context.Context, moviment *model.Moviment) (*[]model.Moviment, error){
 	childLogger.Info().Str("func","GetSumMovimentAccount").Interface("trace-resquest-id", ctx.Value("trace-request-id")).Send()
 
 	// trace
@@ -206,14 +208,14 @@ func (w WorkerRepository) GetSumMovimentAccount(ctx context.Context, moviment mo
 		if err != nil {
 			return nil, errors.New(err.Error())
         }
-		list_moviment = append(list_moviment, moviment)
+		list_moviment = append(list_moviment, *moviment)
 	}
 	
 	return &list_moviment, nil
 }
 
 // Above get all mobviments done in an account
-func (w WorkerRepository) GetAllMovimentAccount(ctx context.Context, moviment model.Moviment) (*[]model.Moviment, error){
+func (w WorkerRepository) GetAllMovimentAccount(ctx context.Context, moviment *model.Moviment) (*[]model.Moviment, error){
 	childLogger.Info().Str("func","GetAllMovimentAccount").Interface("trace-resquest-id", ctx.Value("trace-request-id")).Send()
 
 	// trace
@@ -254,13 +256,13 @@ func (w WorkerRepository) GetAllMovimentAccount(ctx context.Context, moviment mo
 		if err != nil {
 			return nil, errors.New(err.Error())
         }
-		list_moviment = append(list_moviment, moviment)
+		list_moviment = append(list_moviment, *moviment)
 	}
 	return &list_moviment, nil
 }
 
 // Above get the sum of all moviment (summary)
-func (w WorkerRepository) GetSumMovimentAccountPerDate(ctx context.Context, moviment model.Moviment) (*[]model.Moviment, error){
+func (w WorkerRepository) GetSumMovimentAccountPerDate(ctx context.Context, moviment *model.Moviment) (*[]model.Moviment, error){
 	childLogger.Info().Str("func","GetSumMovimentAccountPerDate").Interface("trace-resquest-id", ctx.Value("trace-request-id")).Send()
 
 	// trace
@@ -298,14 +300,14 @@ func (w WorkerRepository) GetSumMovimentAccountPerDate(ctx context.Context, movi
 		if err != nil {
 			return nil, errors.New(err.Error())
         }
-		list_moviment = append(list_moviment, moviment)
+		list_moviment = append(list_moviment, *moviment)
 	}
 	
 	return &list_moviment, nil
 }
 
 // Above get all mobviments done in an account
-func (w WorkerRepository) GetAllMovimentAccountPerDate(ctx context.Context, moviment model.Moviment) (*[]model.Moviment, error){
+func (w WorkerRepository) GetAllMovimentAccountPerDate(ctx context.Context, moviment *model.Moviment) (*[]model.Moviment, error){
 	childLogger.Info().Str("func","GetAllMovimentAccountPerDate").Interface("trace-resquest-id", ctx.Value("trace-request-id")).Send()
 
 	// trace
@@ -347,7 +349,7 @@ func (w WorkerRepository) GetAllMovimentAccountPerDate(ctx context.Context, movi
 		if err != nil {
 			return nil, errors.New(err.Error())
         }
-		list_moviment = append(list_moviment, moviment)
+		list_moviment = append(list_moviment, *moviment)
 	}
 	return &list_moviment, nil
 }

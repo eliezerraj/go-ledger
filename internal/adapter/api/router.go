@@ -22,16 +22,23 @@ import (
 	go_core_tools "github.com/eliezerraj/go-core/tools"
 )
 
-var childLogger = log.With().Str("component", "go-ledger").Str("package", "internal.adapter.api").Logger()
-
-var core_json 		coreJson.CoreJson
-var core_apiError 	coreJson.APIError
-var core_tools 		go_core_tools.ToolsCore
-var tracerProvider 	go_core_observ.TracerProvider
+var (
+	childLogger = log.With().Str("component", "go-ledger").Str("package", "internal.adapter.api").Logger()
+	core_json 		coreJson.CoreJson
+	core_apiError 	coreJson.APIError
+	core_tools 		go_core_tools.ToolsCore
+	tracerProvider 	go_core_observ.TracerProvider
+)
 
 type HttpRouters struct {
 	workerService 	*service.WorkerService
 	ctxTimeout		time.Duration
+}
+
+// Type for async result
+type result struct {
+		data interface{}
+		err  error
 }
 
 // Above create routers
@@ -122,12 +129,34 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
     }
 	defer req.Body.Close()
 
-	res, err := h.workerService.MovimentTransaction(ctx, moviment)
+	/*res, err := h.workerService.MovimentTransaction(ctx, moviment)
 	if err != nil {
 		return h.ErrorHandler(trace_id, err)
 	}
 	
-	return core_json.WriteJSON(rw, http.StatusOK, res)
+	return core_json.WriteJSON(rw, http.StatusOK, res)*/
+
+	// create channel for async result
+	resCh := make(chan result, 1)
+
+	// run async call
+	go func() {
+		res, err := h.workerService.MovimentTransaction(ctx, &moviment)
+		resCh <- result{data: res, err: err}
+	}()
+
+	// wait for either: context timeout or service result
+	select {
+	case <-ctx.Done():
+		childLogger.Error().Str("trace_id", trace_id).Msg("MovimentTransaction timeout or cancelled")
+		return h.ErrorHandler(trace_id, ctx.Err())
+
+	case r := <-resCh:
+		if r.err != nil {
+			return h.ErrorHandler(trace_id, r.err)
+		}
+		return core_json.WriteJSON(rw, http.StatusOK, r.data)
+	}	
 }
 
 // About get account statement
@@ -152,12 +181,34 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
 	moviment.AccountFrom = model.Account{AccountID: varID}
 
 	// call service
-	res, err := h.workerService.GetAccountStament(ctx, moviment)
+	/*res, err := h.workerService.GetAccountStament(ctx, moviment)
 	if err != nil {
 		return h.ErrorHandler(trace_id, err)
 	}
 	
-	return core_json.WriteJSON(rw, http.StatusOK, res)
+	return core_json.WriteJSON(rw, http.StatusOK, res)*/
+
+	// create channel for async result
+	resCh := make(chan result, 1)
+
+	// run async call
+	go func() {
+		res, err := h.workerService.GetAccountStament(ctx, &moviment)
+		resCh <- result{data: res, err: err}
+	}()
+
+	// wait for either: context timeout or service result
+	select {
+	case <-ctx.Done():
+		childLogger.Error().Str("trace_id", trace_id).Msg("GetAccountStament timeout or cancelled")
+		return h.ErrorHandler(trace_id, ctx.Err())
+
+	case r := <-resCh:
+		if r.err != nil {
+			return h.ErrorHandler(trace_id, r.err)
+		}
+		return core_json.WriteJSON(rw, http.StatusOK, r.data)
+	}	
 }
 
 // About get account statement
@@ -188,10 +239,32 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
 								TransactionAt: convertDate}
 
 	// call service
-	res, err := h.workerService.GetAccountMovimentStatementPerDate(ctx, moviment)
+	/*res, err := h.workerService.GetAccountMovimentStatementPerDate(ctx, moviment)
 	if err != nil {
 		return h.ErrorHandler(trace_id, err)
 	}
 	
-	return core_json.WriteJSON(rw, http.StatusOK, res)
+	return core_json.WriteJSON(rw, http.StatusOK, res)*/
+
+	// create channel for async result
+	resCh := make(chan result, 1)
+
+	// run async call
+	go func() {
+		res, err := h.workerService.GetAccountMovimentStatementPerDate(ctx, &moviment)
+		resCh <- result{data: res, err: err}
+	}()
+
+	// wait for either: context timeout or service result
+	select {
+	case <-ctx.Done():
+		childLogger.Error().Str("trace_id", trace_id).Msg("GetAccountMovimentStatementPerDate timeout or cancelled")
+		return h.ErrorHandler(trace_id, ctx.Err())
+
+	case r := <-resCh:
+		if r.err != nil {
+			return h.ErrorHandler(trace_id, r.err)
+		}
+		return core_json.WriteJSON(rw, http.StatusOK, r.data)
+	}		
 }

@@ -25,16 +25,18 @@ import(
 	"go.opentelemetry.io/otel/propagation"
 )
 
-var tracerProvider go_core_observ.TracerProvider
-var childLogger = log.With().Str("component","go-ledger").Str("package","internal.core.service").Logger()
-var apiService 	go_core_api.ApiService
+var (
+	tracerProvider go_core_observ.TracerProvider
+	childLogger = log.With().Str("component","go-ledger").Str("package","internal.core.service").Logger()
+	apiService 	go_core_api.ApiService
+)
 
 type WorkerService struct {
 	goCoreRestApiService	go_core_api.ApiService
 	apiService				[]model.ApiService
 	workerRepository 		*database.WorkerRepository
 	workerEvent				*event.WorkerEvent
-	mutex    				sync.Mutex
+	mutex    				sync.Mutex 
 }
 
 // About create a new worker service
@@ -78,7 +80,7 @@ func (s *WorkerService) Stat(ctx context.Context) (go_core_pg.PoolStats){
 }
 
 // About create a moviment transaction
-func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.Moviment) (*model.MovimentTransaction, error){
+func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment *model.Moviment) (*model.MovimentTransaction, error){
 	childLogger.Info().Str("func","MovimentTransaction").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
@@ -234,7 +236,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment model.
 	// --------------------------- STEP 02 ------------------------------------//
 	// Start Kafka transaction (if workerEvent is nil means kafka unabled)
 	if s.workerEvent != nil {
-		err = s.ProducerEventKafka(ctx, moviment, res_moviment_transaction, *res_transaction)
+		err = s.ProducerEventKafka(ctx, *moviment, res_moviment_transaction, *res_transaction)
 		if err != nil {
 			return nil, err
 		}
@@ -332,7 +334,7 @@ func(s *WorkerService) ProducerEventKafka(ctx context.Context, moviment model.Mo
 }
 
 // About get ledger all moviment
-func (s *WorkerService) GetAccountStament(ctx context.Context, moviment model.Moviment) (*model.MovimentStatement, error){
+func (s *WorkerService) GetAccountStament(ctx context.Context, moviment *model.Moviment) (*model.MovimentStatement, error){
 	childLogger.Info().Str("func","GetAccountStament").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
@@ -368,7 +370,7 @@ func (s *WorkerService) GetAccountStament(ctx context.Context, moviment model.Mo
 }
 
 // About get ledger moviment per data
-func (s *WorkerService) GetAccountMovimentStatementPerDate(ctx context.Context, moviment model.Moviment) (*model.MovimentStatement, error){
+func (s *WorkerService) GetAccountMovimentStatementPerDate(ctx context.Context, moviment *model.Moviment) (*model.MovimentStatement, error){
 	childLogger.Info().Str("func","GetAccountMovimentStatementPerDate").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
