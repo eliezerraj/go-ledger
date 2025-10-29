@@ -20,9 +20,10 @@ import (
 	"github.com/eliezerraj/go-core/middleware"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/contrib/propagators/aws/xray"
+	"go.opentelemetry.io/otel/trace"
+	//"go.opentelemetry.io/contrib/propagators/aws/xray"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
-
 )
 
 var (
@@ -30,6 +31,7 @@ var (
 	core_middleware middleware.ToolsMiddleware
 	tracerProvider go_core_observ.TracerProvider
 	infoTrace go_core_observ.InfoTrace
+	tracer	trace.Tracer
 )
 
 type HttpServer struct {
@@ -60,8 +62,9 @@ func (h HttpServer) StartHttpAppServer(	ctx context.Context,
 											&infoTrace)
 
 	if tp != nil {
-		otel.SetTextMapPropagator(xray.Propagator{})
+		otel.SetTextMapPropagator(propagation.TraceContext{}) // xray.Propagator{}
 		otel.SetTracerProvider(tp)
+		tracer = tp.Tracer(appServer.InfoPod.PodName)
 	}
 
 	defer func() { 
