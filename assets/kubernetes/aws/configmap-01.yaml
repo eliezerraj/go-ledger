@@ -12,8 +12,6 @@ data:
   DB_HOST: "rds-proxy-db-arch.proxy-couoacqalfwt.us-east-2.rds.amazonaws.com"
   DB_PORT: "5432"
   DB_NAME: "postgres"
-  DB_SCHEMA: "public"
-  DB_DRIVER: "postgres"
   DB_MAX_CONNECTION: "10"
   CTX_TIMEOUT: "5"
   SETPOD_AZ: "false"
