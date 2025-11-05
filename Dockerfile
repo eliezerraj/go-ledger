@@ -1,7 +1,7 @@
 #docker build -t go-ledger .
 #docker run -dit --name go-ledger -p 6003:6003 go-ledger sleep infinity
 
-FROM golang:1.23.3 As builder
+FROM golang:1.24 As builder
 
 RUN apt-get update && apt-get install bash && apt-get install -y --no-install-recommends ca-certificates
 
