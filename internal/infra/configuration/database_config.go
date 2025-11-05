@@ -27,12 +27,6 @@ func GetDatabaseEnv() go_core_pg.DatabaseConfig {
 	if os.Getenv("DB_NAME") !=  "" {	
 		databaseConfig.DatabaseName = os.Getenv("DB_NAME")
 	}
-	if os.Getenv("DB_SCHEMA") !=  "" {	
-		databaseConfig.Schema = os.Getenv("DB_SCHEMA")
-	}
-	if os.Getenv("DB_DRIVER") !=  "" {	
-		databaseConfig.Postgres_Driver = os.Getenv("DB_DRIVER")
-	}
 	if os.Getenv("DB_MAX_CONNECTION") !=  "" {
 		intVar, _ := strconv.Atoi(os.Getenv("DB_MAX_CONNECTION"))
 		databaseConfig.DbMax_Connection = intVar
