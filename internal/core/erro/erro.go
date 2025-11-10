@@ -13,5 +13,6 @@ var (
 	ErrServer		 	= errors.New("server identified error")
 	ErrUnmarshal 		= errors.New("unmarshal json error")
 	ErrForceRollback 	= errors.New("force rollback")
-	ErrTimeout			= errors.New("timeout: context deadline exceeded.")
+	ErrTimeout			= errors.New("timeout: context deadline exceeded")
+	ErrHealthCheck		= errors.New("health check services required failed")
 )

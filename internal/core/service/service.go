@@ -84,7 +84,7 @@ func (s *WorkerService) MovimentTransaction(ctx context.Context, moviment *model
 	childLogger.Info().Str("func","MovimentTransaction").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
-	span := tracerProvider.Span(ctx, "service.MovimentTransaction")
+	ctx, span := tracerProvider.SpanCtx(ctx, "service.MovimentTransaction")
 	trace_id := fmt.Sprintf("%v",ctx.Value("trace-request-id"))
 	
 	// prepare database
@@ -253,7 +253,7 @@ func(s *WorkerService) ProducerEventKafka(ctx context.Context, moviment model.Mo
 	childLogger.Info().Str("func","ProducerEventKafka").Interface("trace-request-id", ctx.Value("trace-request-id")).Send()
 
 	// trace
-	span := tracerProvider.Span(ctx, "service.ProducerEventKafka")
+	ctx, span := tracerProvider.SpanCtx(ctx, "service.ProducerEventKafka")
 	defer span.End()
 	
 	trace_id := fmt.Sprintf("%v",ctx.Value("trace-request-id"))
@@ -338,7 +338,7 @@ func (s *WorkerService) GetAccountStament(ctx context.Context, moviment *model.M
 	childLogger.Info().Str("func","GetAccountStament").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
-	span := tracerProvider.Span(ctx, "service.GetAccountStament")
+	ctx, span := tracerProvider.SpanCtx(ctx, "service.GetAccountStament")
 	defer span.End()
 
 	// get the summary of all moviments
@@ -374,7 +374,7 @@ func (s *WorkerService) GetAccountMovimentStatementPerDate(ctx context.Context, 
 	childLogger.Info().Str("func","GetAccountMovimentStatementPerDate").Interface("trace-request-id", ctx.Value("trace-request-id")).Interface("moviment", moviment).Send()
 
 	// trace
-	span := tracerProvider.Span(ctx, "service.GetAccountMovimentStatementPerDate")
+	ctx, span := tracerProvider.SpanCtx(ctx, "service.GetAccountMovimentStatementPerDate")
 	defer span.End()
 
 	// get the summary of all moviments
@@ -403,4 +403,48 @@ func (s *WorkerService) GetAccountMovimentStatementPerDate(ctx context.Context, 
 	}
 	
 	return &res_moviment_statement, nil
+}
+
+// About check health service
+func (s * WorkerService) HealthCheck(ctx context.Context) error{
+	childLogger.Info().Str("func","HealthCheck").Interface("trace-resquest-id", ctx.Value("trace-request-id")).Send()
+
+	// Trace
+	ctx, span := tracerProvider.SpanCtx(ctx, "service.HealthCheck")
+	defer span.End()
+	trace_id := fmt.Sprintf("%v",ctx.Value("trace-request-id"))
+
+	// Check database health
+	err := s.workerRepository.DatabasePGServer.Ping()
+	if err != nil {
+		log.Error().Err(err).Msg("*** database health check failed ***")
+		return erro.ErrHealthCheck
+	}
+
+	// Set headers
+	headers := map[string]string{
+		"Content-Type":  "application/json;charset=UTF-8",
+		"X-Request-Id": trace_id,
+		"Host": s.apiService[0].HostName,
+	}
+
+	// Set client http	
+	httpClient := go_core_api.HttpClient {
+		Url: 	s.apiService[0].Url + "/health",
+		Method: s.apiService[0].Method,
+		Timeout: s.apiService[0].HttpTimeout,
+		Headers: &headers,
+	}
+
+	// get account_if from id (PK)
+	_, _, err = apiService.CallRestApiV1(	ctx,
+											s.goCoreRestApiService.Client,
+											httpClient, 
+											nil)
+	if err != nil {
+		log.Error().Err(err).Msg("*** service ACCOUNT health failed ***")
+		return erro.ErrHealthCheck
+	}
+
+	return nil
 }

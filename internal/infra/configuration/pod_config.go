@@ -42,7 +42,10 @@ func GetInfoPod() (	model.InfoPod, model.Server) {
 	if os.Getenv("ENV") !=  "" {	
 		infoPod.Env = os.Getenv("ENV")
 	}
-	
+	if os.Getenv("ACCOUNT_ID") !=  "" {	
+		infoPod.AccountID = os.Getenv("ACCOUNT_ID")
+	}
+		
 	// Get IP
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {

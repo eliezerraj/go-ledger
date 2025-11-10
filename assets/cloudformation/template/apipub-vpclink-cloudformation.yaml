@@ -123,6 +123,34 @@ Resources:
         - https
         paths:
           /{proxy+}:
+            options:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST,PUT,DELETE'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Request-Id,client-id,jwt-id'"
+                    responseTemplates:
+                      application/json: '{}'
             get:
               produces:
               - application/json
@@ -140,7 +168,7 @@ Resources:
                   Fn::Sub:
                   - 'https://${EksDomainName}/{proxy}'
                   - EksDomainName: !FindInMap [ApigwMap, Ledger, EndpointURL]
-                passthroughBehavior: when_no_match
+                passthroughBehavior: when_no_templates
                 requestParameters:
                   integration.request.path.proxy: method.request.path.proxy
                   integration.request.header.X-Request-ID: context.requestId
@@ -150,6 +178,8 @@ Resources:
               security:
               - authorizer: []
             post:
+              consumes:
+              - application/json
               produces:
               - application/json
               responses:
@@ -166,7 +196,7 @@ Resources:
                   Fn::Sub:
                   - 'https://${EksDomainName}/{proxy}'
                   - EksDomainName: !FindInMap [ApigwMap, Ledger, EndpointURL]
-                passthroughBehavior: when_no_match
+                passthroughBehavior: when_no_templates
                 requestParameters:
                   integration.request.path.proxy: method.request.path.proxy
                   integration.request.header.X-Request-ID: context.requestId

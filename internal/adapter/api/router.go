@@ -117,7 +117,7 @@ func (h *HttpRouters) MovimentTransaction(rw http.ResponseWriter, req *http.Requ
     defer cancel()
 
 	//trace
-	span := tracerProvider.Span(ctx, "adapter.api.MovimentTransaction")
+	ctx, span := tracerProvider.SpanCtx(ctx, "adapter.api.MovimentTransaction")
 	defer span.End()
 
 	trace_id := fmt.Sprintf("%v", ctx.Value("trace-request-id"))
@@ -168,7 +168,7 @@ func (h *HttpRouters) GetAccountMovimentStatement(rw http.ResponseWriter, req *h
     defer cancel()
 
 	// trace
-	span := tracerProvider.Span(ctx, "adapter.api.GetAccountMovimentStatement")
+	ctx, span := tracerProvider.SpanCtx(ctx, "adapter.api.GetAccountMovimentStatement")
 	defer span.End()
 
 	trace_id := fmt.Sprintf("%v", ctx.Value("trace-request-id"))
@@ -220,7 +220,7 @@ func (h *HttpRouters) GetAccountMovimentStatementPerDate(rw http.ResponseWriter,
     defer cancel()
 
 	// trace
-	span := tracerProvider.Span(ctx, "adapter.api.GetAccountMovimentStatementPerDate")
+	ctx, span := tracerProvider.SpanCtx(ctx, "adapter.api.GetAccountMovimentStatementPerDate")
 	defer span.End()
 
 	trace_id := fmt.Sprintf("%v", ctx.Value("trace-request-id"))

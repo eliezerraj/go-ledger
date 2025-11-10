@@ -91,6 +91,14 @@ func main (){
 												workerEvent )
 	httpRouters := api.NewHttpRouters(workerService, time.Duration(appServer.Server.CtxTimeout))
 
+	// Services Health Check
+	err = workerService.HealthCheck(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("fatal error health check aborting")
+	} else {
+		childLogger.Info().Msg("SERVICES HEALTH CHECK OK")
+	}
+
 	// start server
 	httpServer := server.NewHttpAppServer(appServer.Server)
 	httpServer.StartHttpAppServer(ctx, &httpRouters, &appServer)
